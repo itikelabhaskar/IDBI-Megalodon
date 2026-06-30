@@ -7,6 +7,7 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateDataset } from "../src/lib/data/generate";
 import { trainModel, splitTrainTest } from "../src/lib/scoring/train";
+import { trainGbm } from "../src/lib/scoring/gbm-train";
 import { TERM_DEFS } from "../src/lib/scoring/ml-terms";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -18,6 +19,13 @@ const model = trainModel(train, test, { epochs: 2000, lr: 0.2, l2: 1e-3 });
 writeFileSync(
   resolve(here, "../src/lib/scoring/model.json"),
   JSON.stringify(model, null, 2) + "\n",
+);
+
+// Gradient-boosted challenger (champion–challenger governance).
+const gbm = trainGbm(train, test, { trees: 200, lr: 0.05, maxDepth: 3, lambda: 1, minSamples: 20 });
+writeFileSync(
+  resolve(here, "../src/lib/scoring/gbm-model.json"),
+  JSON.stringify(gbm, null, 2) + "\n",
 );
 
 const m = model.metrics;
@@ -49,6 +57,21 @@ A transparent logistic scorecard that estimates an MSME's **viability** (1 − p
 | KS | ${m.ks} |
 | Gini | ${m.gini} |
 
+## Challenger — gradient-boosted trees
+| Metric | Logistic (champion) | GBM (challenger) |
+| --- | --- | --- |
+| AUC | ${m.auc} | ${gbm.metrics.auc} |
+| KS | ${m.ks} | ${gbm.metrics.ks} |
+| Gini | ${m.gini} | ${gbm.metrics.gini} |
+| Trees | — | ${gbm.metrics.trees} |
+
+The **champion** stays the monotonic logistic scorecard (exact additive
+explanations, sign-constrained, final control). The **GBM challenger** is a
+non-monotonic benchmark run alongside it to confirm the scorecard is not leaving
+material signal on the table. A **calibration curve** and a **band → expected-PD**
+table are surfaced on the Governance screen; in a pilot the challenger only gets
+promoted after backtesting and calibration on IDBI's anonymised portfolio.
+
 ## Features and fitted direction
 | Feature | Weight (standardised) | Effect |
 | --- | --- | --- |
@@ -79,5 +102,6 @@ For this linear model the per-feature contribution is **exact** (weight × stand
 writeFileSync(resolve(here, "../docs/model-card.md"), card);
 
 console.log(
-  `Trained on ${m.trainN} / tested on ${m.testN}. AUC=${m.auc} KS=${m.ks} Gini=${m.gini} defaultRate(train)=${m.defaultRateTrain}`,
+  `Trained on ${m.trainN} / tested on ${m.testN}. AUC=${m.auc} KS=${m.ks} Gini=${m.gini} defaultRate(train)=${m.defaultRateTrain}\n` +
+    `Challenger GBM: AUC=${gbm.metrics.auc} KS=${gbm.metrics.ks} Gini=${gbm.metrics.gini} trees=${gbm.metrics.trees}`,
 );

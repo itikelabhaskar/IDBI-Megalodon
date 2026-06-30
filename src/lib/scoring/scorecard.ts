@@ -21,6 +21,21 @@ export const SUBSCORE_WEIGHTS = {
 
 const clamp = (x: number, lo = 0, hi = 100): number => Math.min(hi, Math.max(lo, x));
 
+// The minimal non-feature context the compliance sub-score needs. Extracted so
+// sub-scores can be recomputed from a feature vector alone (what-if simulator)
+// without a full RawMsme.
+export interface ScoreCtx {
+  hasUdyam: boolean;
+  availableSources: number;
+}
+
+function ctxFromRaw(raw: RawMsme): ScoreCtx {
+  return {
+    hasUdyam: !!raw.profile.udyamId,
+    availableSources: raw.dataCompleteness.filter((d) => d.available).length,
+  };
+}
+
 function gstScore(f: FeatureVector): number | null {
   if (!f.hasGst) return null;
   let s = 100;
@@ -67,7 +82,7 @@ function epfoScore(f: FeatureVector): number | null {
   return clamp(s);
 }
 
-function complianceScore(f: FeatureVector, raw: RawMsme): number {
+function complianceScore(f: FeatureVector, ctx: ScoreCtx): number {
   let s = 100;
   if (f.hasGst) {
     if (f.gstOnTimeRatio < 0.8) s -= 20;
@@ -77,10 +92,9 @@ function complianceScore(f: FeatureVector, raw: RawMsme): number {
     s -= 15; // no GST registration weakens the governance signal
   }
   if (f.hasEpfo && f.epfoMissingMonthRatio > 0.25) s -= 10;
-  if (!raw.profile.udyamId) s -= 10;
-  const available = raw.dataCompleteness.filter((d) => d.available).length;
-  if (available <= 2) s -= 15;
-  else if (available === 3) s -= 8;
+  if (!ctx.hasUdyam) s -= 10;
+  if (ctx.availableSources <= 2) s -= 15;
+  else if (ctx.availableSources === 3) s -= 8;
   return clamp(s);
 }
 
@@ -114,12 +128,17 @@ function operationsScore(f: FeatureVector): number | null {
 }
 
 export function computeSubScores(f: FeatureVector, raw: RawMsme): SubScores {
+  return computeSubScoresCtx(f, ctxFromRaw(raw));
+}
+
+/** Sub-scores from a feature vector + minimal context (used by the simulator). */
+export function computeSubScoresCtx(f: FeatureVector, ctx: ScoreCtx): SubScores {
   return {
     gst: gstScore(f),
     bank: bankScore(f),
     upi: upiScore(f),
     epfo: epfoScore(f),
-    compliance: complianceScore(f, raw),
+    compliance: complianceScore(f, ctx),
     bureau: bureauScore(f),
     operations: operationsScore(f),
   };

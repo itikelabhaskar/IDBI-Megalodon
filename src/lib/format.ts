@@ -6,20 +6,22 @@ const inrFormatter = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0,
 });
 
-const inrCompact = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
-
 export function formatInr(value: number): string {
   return inrFormatter.format(value);
 }
 
+// Deterministic Indian compact currency (₹..K / ₹..L / ₹..Cr). Hand-rolled
+// rather than Intl `notation: "compact"` because ICU formats round values
+// inconsistently between Node (SSR) and the browser (e.g. "₹90.0L" vs "₹90L"),
+// which causes React hydration mismatches.
 export function formatInrCompact(value: number): string {
-  // e.g. ₹12.5L, ₹1.2Cr — Intl handles Indian compact units.
-  return inrCompact.format(value);
+  const sign = value < 0 ? "-" : "";
+  const v = Math.abs(value);
+  const fmt = (n: number, suffix: string) => `${sign}₹${n.toFixed(1).replace(/\.0$/, "")}${suffix}`;
+  if (v >= 1e7) return fmt(v / 1e7, "Cr");
+  if (v >= 1e5) return fmt(v / 1e5, "L");
+  if (v >= 1e3) return fmt(v / 1e3, "K");
+  return `${sign}₹${Math.round(v)}`;
 }
 
 export function formatPercent(value: number, digits = 0): string {

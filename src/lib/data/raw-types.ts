@@ -102,6 +102,16 @@ export interface PowerMonthly {
   billAmount: number;
 }
 
+// Fuel / operational-spend feed (the DGM named fuel for traders and logistics as
+// an activity proxy alongside power). Monthly diesel/petrol spend a logistics or
+// trading MSME incurs; corroborates real operating activity and triangulates
+// against declared turnover, the same way electricity does for manufacturers.
+export interface FuelMonthly {
+  month: string;
+  spend: number; // ₹ fuel spend in the month
+  litres: number; // implied volume at the prevailing pump price
+}
+
 export interface BureauLite {
   totalExistingEmi: number;
   numActiveLoans: number;
@@ -115,6 +125,7 @@ export interface RawMsme {
   upi: UpiMonthly[] | null;
   epfo: EpfoMonthly[] | null;
   power: PowerMonthly[] | null;
+  fuel: FuelMonthly[] | null;
   bureau: BureauLite | null;
   dataCompleteness: { source: DataSource; available: boolean; monthsCovered?: number }[];
 

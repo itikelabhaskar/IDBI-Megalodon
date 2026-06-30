@@ -5,11 +5,17 @@
 // hidden latent or the synthetic_default label (see the leakage-free design).
 
 import type { RawMsme } from "../data/raw-types";
+import { detectReversedPairs } from "./fraud-analytics";
 
 // Average ₹ of turnover represented by 1 kWh of electricity consumed. Used to
 // translate power usage into an implied turnover (thin-file inference) and to
 // triangulate declared GST turnover against real operational activity.
 export const RUPEES_PER_KWH = 2600;
+
+// Average ₹ of turnover represented by ₹1 of fuel spend (inverse of a blended
+// fuel-intensity across logistics/trading sectors). Used to translate fuel spend
+// into implied operating activity for thin-file traders.
+export const RUPEES_TURNOVER_PER_FUEL = 66;
 
 export interface FeatureVector {
   hasGst: boolean;
@@ -52,6 +58,13 @@ export interface FeatureVector {
   powerImpliedTurnover: number; // powerConsumptionAvg × RUPEES_PER_KWH (monthly)
   turnoverPowerGap: number; // (gstTurnover − powerImplied) / gstTurnover — high ⇒ activity below claimed turnover
 
+  // Fuel / operations (fuel-spend alternate signal for traders & logistics)
+  hasFuel: boolean;
+  fuelSpendAvg: number; // mean monthly fuel spend (₹)
+  fuelTrend: number; // (last-3 avg − first-3 avg) / first-3 avg
+  fuelImpliedActivity: number; // fuelSpendAvg × RUPEES_TURNOVER_PER_FUEL (monthly)
+  fuelTurnoverGap: number; // (gstTurnover − fuelImplied) / gstTurnover
+
   // Cross-source triangulation
   gstBankTurnoverGap: number; // (gstTotal − bankSaleTotal) / gstTotal — high ⇒ mismatch
   seasonalSectorFlag: boolean;
@@ -81,7 +94,6 @@ export function computeFeatures(raw: RawMsme): FeatureVector {
   // ---- Bank monthly aggregation (genuine SALE credits + closing balances) ----
   const byMonth = new Map<string, { sale: number; debit: number }>();
   let negBalance = 0;
-  let hasCircular = false;
   let cashCr = 0;
   let allCr = 0;
   let emiBounceCount = 0;
@@ -95,11 +107,14 @@ export function computeFeatures(raw: RawMsme): FeatureVector {
       if (t.narrationTag === "SALE") m.sale += t.amount;
     }
     if (t.direction === "DR" && !t.isReturn) m.debit += t.amount;
-    if (t.narrationTag === "MISC" && t.amount === 999999) hasCircular = true;
     if (t.narrationTag === "EMI" && t.isReturn) emiBounceCount++;
     if (t.balancePost < 0) negBalance++;
     byMonth.set(period, m);
   }
+
+  // Circular-flow / round-tripping is now detected statistically (matched in/out
+  // pairs of equal value), not via a hard-coded sentinel amount.
+  const hasCircular = detectReversedPairs(raw.bank.transactions).count >= 1;
 
   const monthlySale = [...byMonth.values()].map((m) => m.sale);
   const bankMonthlyCreditAvg = mean(monthlySale);
@@ -175,6 +190,25 @@ export function computeFeatures(raw: RawMsme): FeatureVector {
         : 0;
   }
 
+  // ---- Fuel / operations ----
+  const hasFuel = !!raw.fuel;
+  let fuelSpendAvg = 0;
+  let fuelTrend = 0;
+  let fuelImpliedActivity = 0;
+  let fuelTurnoverGap = 0;
+  if (hasFuel) {
+    const spend = raw.fuel!.map((p) => p.spend);
+    fuelSpendAvg = mean(spend);
+    const ff3 = mean(spend.slice(0, 3));
+    const fl3 = mean(spend.slice(-3));
+    fuelTrend = ff3 > 0 ? (fl3 - ff3) / ff3 : 0;
+    fuelImpliedActivity = fuelSpendAvg * RUPEES_TURNOVER_PER_FUEL;
+    fuelTurnoverGap =
+      hasGst && gstMonthlyTurnoverAvg > 0
+        ? (gstMonthlyTurnoverAvg - fuelImpliedActivity) / gstMonthlyTurnoverAvg
+        : 0;
+  }
+
   return {
     hasGst,
     hasUpi,
@@ -203,6 +237,11 @@ export function computeFeatures(raw: RawMsme): FeatureVector {
     powerTrend,
     powerImpliedTurnover,
     turnoverPowerGap,
+    hasFuel,
+    fuelSpendAvg,
+    fuelTrend,
+    fuelImpliedActivity,
+    fuelTurnoverGap,
     gstBankTurnoverGap,
     seasonalSectorFlag: raw.profile.seasonalSector,
   };

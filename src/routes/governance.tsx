@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { GovernancePanel } from "@/components/healthlens/governance-panel";
+import { ModelValidationPanel } from "@/components/healthlens/model-validation-panel";
 import { listCases } from "@/lib/mock-cases";
 
 export const Route = createFileRoute("/governance")({
@@ -29,6 +30,7 @@ function GovernancePage() {
         </p>
       </header>
       <GovernancePanel cases={listCases()} />
+      <ModelValidationPanel />
     </div>
   );
 }

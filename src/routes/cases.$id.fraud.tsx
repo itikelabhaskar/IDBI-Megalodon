@@ -1,12 +1,15 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { getCase } from "@/lib/mock-cases";
 import { FraudFlagList } from "@/components/healthlens/fraud-flag-list";
+import { FraudAnalyticsPanel } from "@/components/healthlens/fraud-analytics-panel";
 import {
   TriangulationChart,
   PowerTriangulationChart,
+  FuelChart,
   UpiTrendChart,
 } from "@/components/healthlens/charts";
-import { RUPEES_PER_KWH } from "@/lib/scoring/features";
+import { RUPEES_PER_KWH, RUPEES_TURNOVER_PER_FUEL } from "@/lib/scoring/features";
+import { formatInrCompact } from "@/lib/format";
 
 export const Route = createFileRoute("/cases/$id/fraud")({
   loader: ({ params }) => {
@@ -28,6 +31,10 @@ function FraudPage() {
   const impliedFromPower = totalPowerKwh * RUPEES_PER_KWH;
   const powerMismatchPct =
     totalGst === 0 ? 0 : Math.round(((totalGst - impliedFromPower) / totalGst) * 100);
+  const totalFuel = data.fuelConsumption.reduce((s, p) => s + p.value, 0);
+  const impliedFromFuel = totalFuel * RUPEES_TURNOVER_PER_FUEL;
+  const fuelMismatchPct =
+    totalGst === 0 ? 0 : Math.round(((totalGst - impliedFromFuel) / totalGst) * 100);
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -80,6 +87,49 @@ function FraudPage() {
               Electricity feed not consented for this applicant.
             </p>
           )}
+        </div>
+      </section>
+
+      <section className="rounded-md border border-border bg-surface">
+        <header className="border-b border-border px-4 py-3">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Fuel triangulation
+          </div>
+          <div className="mt-0.5 text-sm font-semibold text-foreground">
+            Declared turnover vs fuel-implied activity
+          </div>
+        </header>
+        <div className="p-4">
+          <FuelChart data={data.fuelConsumption} />
+          {data.fuelConsumption.length > 0 ? (
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+              <Metric label="12m declared (GST)" value={formatCompact(totalGst)} />
+              <Metric label="Fuel-implied turnover" value={formatCompact(impliedFromFuel)} />
+              <Metric
+                label="Activity gap"
+                value={`${fuelMismatchPct > 0 ? "+" : ""}${fuelMismatchPct}%`}
+                tone={fuelMismatchPct > 60 ? "negative" : "positive"}
+              />
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Fuel / operational-spend feed not on file for this applicant.
+            </p>
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-md border border-border bg-surface">
+        <header className="border-b border-border px-4 py-3">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Statistical fraud screen
+          </div>
+          <div className="mt-0.5 text-sm font-semibold text-foreground">
+            Round-tripping &amp; Benford conformance
+          </div>
+        </header>
+        <div className="p-4">
+          <FraudAnalyticsPanel data={data.fraudAnalytics} />
         </div>
       </section>
 
@@ -139,11 +189,4 @@ function Metric({
   );
 }
 
-function formatCompact(v: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(v);
-}
+const formatCompact = formatInrCompact;

@@ -1,8 +1,10 @@
 import type { MsmeCase } from "@/lib/types";
+import type { ClusterRisk } from "@/lib/types";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { RiskBandChip } from "./risk-band-chip";
 import { DecisionPill } from "./decision-pill";
+import { ConfidenceBadge } from "./confidence-badge";
 import { Building2, Users, BadgeIndianRupee, CalendarClock, MapPin } from "lucide-react";
 
 type TabDef = { suffix: string; label: string; pathSegment: string };
@@ -40,6 +42,8 @@ export function CaseHeader({ data }: { data: MsmeCase }) {
                   NTC/NTB
                 </span>
               )}
+              <ClusterRiskChip risk={data.clusterRisk} />
+              <ConfidenceBadge confidence={data.confidence} />
             </div>
             <div className="mt-1 grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-1 text-[12px] text-muted-foreground">
               <Meta icon={<Building2 className="h-3 w-3" />} label={data.constitution} />
@@ -98,5 +102,23 @@ function Meta({ icon, label }: { icon: React.ReactNode; label: string }) {
       <span className="text-muted-foreground/70">{icon}</span>
       <span className="truncate">{label}</span>
     </div>
+  );
+}
+
+const clusterTone: Record<ClusterRisk["band"], string> = {
+  Low: "border-band-a/40 bg-band-a/10 text-band-a",
+  Moderate: "border-band-b/40 bg-band-b/10 text-band-b",
+  Elevated: "border-band-c/40 bg-band-c/10 text-band-c",
+  High: "border-band-d/40 bg-band-d/10 text-band-d",
+};
+
+function ClusterRiskChip({ risk }: { risk: ClusterRisk }) {
+  return (
+    <span
+      title={`${risk.cluster}: avg HealthScore ${risk.avgHealthScore} across ${risk.peerCount} MSMEs`}
+      className={`rounded-md border px-2 py-0.5 text-[10px] font-medium ${clusterTone[risk.band]}`}
+    >
+      Cluster {risk.band}
+    </span>
   );
 }

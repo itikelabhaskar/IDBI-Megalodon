@@ -27,6 +27,13 @@ export function reasonCodes(f: FeatureVector): ReasonCode[] {
         ? "Electricity consumption is consistent with declared turnover"
         : "Electricity usage confirms active operations; turnover inferred from power for this thin-file applicant",
     );
+  if (f.hasFuel && f.fuelTrend >= -0.05 && (!f.hasGst || f.fuelTurnoverGap <= 0.4))
+    pos(
+      "FUEL_ACTIVITY_CONFIRMED",
+      f.hasGst
+        ? "Fuel / operational spend is consistent with declared turnover"
+        : "Fuel spend confirms active logistics operations for this thin-file applicant",
+    );
 
   // Negative
   if (!f.hasGst)
@@ -56,6 +63,11 @@ export function reasonCodes(f: FeatureVector): ReasonCode[] {
     neg(
       "POWER_DECLINING",
       "Electricity consumption falling sharply — operations may be contracting",
+    );
+  if (f.hasFuel && f.fuelTrend < -0.2)
+    neg(
+      "FUEL_DECLINING",
+      "Fuel / operational spend falling sharply — logistics activity may be contracting",
     );
   if (f.hasCircular)
     neg("CIRCULAR_FLOW_SUSPECT", "Repeated round-amount / circular transfers detected");
@@ -94,6 +106,12 @@ export function fraudFlags(f: FeatureVector): FraudFlag[] {
       code: "PAYROLL_DIVERGENCE",
       severity: "warn",
       label: "Falling EPFO headcount despite claimed business activity",
+    });
+  if (f.hasGst && f.hasFuel && f.fuelTurnoverGap > 0.6)
+    out.push({
+      code: "FUEL_TURNOVER_MISMATCH",
+      severity: "info",
+      label: `Fuel-implied activity ${Math.round(f.fuelTurnoverGap * 100)}% below declared turnover`,
     });
   return out;
 }

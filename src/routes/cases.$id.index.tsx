@@ -11,6 +11,7 @@ import {
   CashflowChart,
   UpiTrendChart,
   PowerChart,
+  FuelChart,
   BuyerConcentrationChart,
 } from "@/components/healthlens/charts";
 
@@ -69,11 +70,13 @@ function HealthCardPage() {
           <ChartPanel title="Electricity consumption (12m, kWh)">
             <PowerChart data={data.powerConsumption} />
           </ChartPanel>
+          <ChartPanel title="Fuel / operational spend (12m)">
+            <FuelChart data={data.fuelConsumption} />
+          </ChartPanel>
+          <ChartPanel title="Buyer concentration">
+            <BuyerConcentrationChart data={data.buyerConcentration} />
+          </ChartPanel>
         </div>
-
-        <ChartPanel title="Buyer concentration">
-          <BuyerConcentrationChart data={data.buyerConcentration} />
-        </ChartPanel>
       </div>
 
       <aside className="space-y-4 xl:sticky xl:top-4 h-fit">
@@ -82,6 +85,26 @@ function HealthCardPage() {
           sector={data.sector}
           cluster={data.clusterCity}
         />
+        <div className="rounded-md border border-border bg-surface p-4">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Cluster risk
+          </div>
+          <div className="mt-1.5 flex items-baseline justify-between">
+            <span className="text-sm font-medium text-foreground">{data.clusterRisk.cluster}</span>
+            <span className="text-sm font-semibold text-foreground">{data.clusterRisk.band}</span>
+          </div>
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary"
+              style={{ width: `${data.clusterRisk.index}%` }}
+            />
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Cluster risk index {data.clusterRisk.index}/100 · avg HealthScore{" "}
+            {data.clusterRisk.avgHealthScore} across {data.clusterRisk.peerCount} MSMEs in this
+            cluster.
+          </p>
+        </div>
         <div className="rounded-md border border-border bg-surface p-4">
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
             Scoring metadata
@@ -96,6 +119,10 @@ function HealthCardPage() {
             <dt className="text-muted-foreground">ML proxy</dt>
             <dd className="text-foreground tabular-nums">
               {(data.mlProbabilityProxy * 100).toFixed(0)}%
+            </dd>
+            <dt className="text-muted-foreground">Confidence</dt>
+            <dd className="text-foreground tabular-nums">
+              {data.confidence.level} · {data.confidence.score}
             </dd>
           </dl>
         </div>

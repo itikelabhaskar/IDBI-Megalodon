@@ -20,6 +20,21 @@ A transparent logistic scorecard that estimates an MSME's **viability** (1 − p
 | KS | 0.3784 |
 | Gini | 0.4865 |
 
+## Challenger — gradient-boosted trees
+| Metric | Logistic (champion) | GBM (challenger) |
+| --- | --- | --- |
+| AUC | 0.7433 | 0.7408 |
+| KS | 0.3784 | 0.3939 |
+| Gini | 0.4865 | 0.4817 |
+| Trees | — | 200 |
+
+The **champion** stays the monotonic logistic scorecard (exact additive
+explanations, sign-constrained, final control). The **GBM challenger** is a
+non-monotonic benchmark run alongside it to confirm the scorecard is not leaving
+material signal on the table. A **calibration curve** and a **band → expected-PD**
+table are surfaced on the Governance screen; in a pilot the challenger only gets
+promoted after backtesting and calibration on IDBI's anonymised portfolio.
+
 ## Features and fitted direction
 | Feature | Weight (standardised) | Effect |
 | --- | --- | --- |

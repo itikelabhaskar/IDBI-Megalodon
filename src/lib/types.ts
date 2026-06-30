@@ -88,6 +88,54 @@ export interface AuditEvent {
   actor: string;
   action: string;
   detail?: string;
+  hash?: string; // tamper-evident chain: hash of this event + prevHash
+  prevHash?: string; // hash of the previous event ("GENESIS" for the first)
+}
+
+export type ConfidenceLevel = "High" | "Medium" | "Low";
+
+export interface ConfidenceFactor {
+  label: string;
+  detail: string;
+  impact: "positive" | "negative" | "neutral";
+}
+
+// How much an officer should trust this assessment, independent of WHETHER it is a
+// good or bad credit. Built from data completeness, recency, and cross-source
+// agreement — NOT a credit-quality signal.
+export interface ConfidenceAssessment {
+  level: ConfidenceLevel;
+  score: number; // 0–100
+  factors: ConfidenceFactor[];
+}
+
+export type ClusterRiskBand = "Low" | "Moderate" | "Elevated" | "High";
+
+// Geospatial cluster benchmark — turns the clusterCity label into a real,
+// peer-relative risk index derived from the HealthScore distribution of MSMEs in
+// the same cluster (no outcome labels are used).
+export interface ClusterRisk {
+  cluster: string;
+  index: number; // 0–100, higher = riskier cluster
+  band: ClusterRiskBand;
+  peerCount: number;
+  avgHealthScore: number;
+}
+
+export interface BenfordDigit {
+  digit: number; // 1–9
+  observed: number; // 0–1 share of leading digit
+  expected: number; // 0–1 Benford expectation
+}
+
+// Statistical fraud-screen analytics over the bank feed — replaces the old
+// sentinel-value circular-flow hack with measurable signals.
+export interface FraudAnalytics {
+  reversedPairCount: number; // matched in/out pairs that net to ~zero (round-tripping)
+  reversedPairValue: number; // ₹ value cycled through reversed pairs
+  roundAmountRatio: number; // 0–1 share of credits that are suspiciously round
+  benfordDeviation: number; // mean absolute deviation of leading-digit dist from Benford
+  benford: BenfordDigit[];
 }
 
 export interface MsmeCase {
@@ -110,6 +158,7 @@ export interface MsmeCase {
   subScores: SubScores;
   mlProbabilityProxy: number; // 0–1 (secondary AI signal)
   contributions: Contribution[]; // explains mlProbabilityProxy ONLY
+  confidence: ConfidenceAssessment; // trust in the assessment (completeness/recency/agreement)
 
   decision: Decision;
   recommendedLimit: number; // rupees, capped 2,500,000
@@ -124,11 +173,14 @@ export interface MsmeCase {
 
   dataCompleteness: DataCompleteness[];
   peerClusterPercentile: number; // 0–100
+  clusterRisk: ClusterRisk; // geospatial cluster benchmark
+  fraudAnalytics: FraudAnalytics; // statistical fraud-screen metrics
 
   gstTrend: TrendPoint[];
   cashflow: CashflowPoint[];
   upiTrend: UpiPoint[];
   powerConsumption: TrendPoint[]; // monthly electricity units (kWh)
+  fuelConsumption: TrendPoint[]; // monthly fuel / operational spend proxy (₹)
   buyerConcentration: BuyerShare[];
 
   audit: AuditEvent[];

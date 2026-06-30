@@ -79,6 +79,12 @@ export function uliHealthCard(req: {
     reason_codes_negative: negCodes(c),
     data_sources_used: sourcesUsed(c),
     fraud_flags: c.fraudFlags.map((f) => f.code),
+    confidence: { level: c.confidence.level, score: c.confidence.score },
+    cluster_risk: {
+      cluster: c.clusterRisk.cluster,
+      band: c.clusterRisk.band,
+      index: c.clusterRisk.index,
+    },
     audit_id: `AUD-${c.id}`,
   };
 }
@@ -120,6 +126,17 @@ export function generateCam(
     reason_codes_positive: posCodes(c),
     reason_codes_negative: negCodes(c),
     fraud_flags: c.fraudFlags,
+    confidence: { level: c.confidence.level, score: c.confidence.score },
+    cluster_risk: {
+      cluster: c.clusterRisk.cluster,
+      band: c.clusterRisk.band,
+      index: c.clusterRisk.index,
+    },
+    fraud_analytics: {
+      reversed_pair_count: c.fraudAnalytics.reversedPairCount,
+      round_amount_ratio: c.fraudAnalytics.roundAmountRatio,
+      benford_deviation: c.fraudAnalytics.benfordDeviation,
+    },
     path_to_credit: c.pathToCredit,
     officer_override: { applied: !!override, reason: override?.reason ?? null },
     audit: c.audit,

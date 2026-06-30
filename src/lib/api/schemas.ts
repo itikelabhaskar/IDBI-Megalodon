@@ -7,6 +7,23 @@ import { z } from "zod";
 const band = z.enum(["A", "B", "C", "D"]);
 const decision = z.enum(["Approve", "Refer", "Reject"]);
 
+export const ConfidenceApiSchema = z.object({
+  level: z.string(),
+  score: z.number(),
+});
+
+export const ClusterRiskApiSchema = z.object({
+  cluster: z.string(),
+  band: z.string(),
+  index: z.number(),
+});
+
+export const FraudAnalyticsApiSchema = z.object({
+  reversed_pair_count: z.number(),
+  round_amount_ratio: z.number(),
+  benford_deviation: z.number(),
+});
+
 export const SubScoresApiSchema = z.object({
   gst: z.number().nullable(),
   cashflow: z.number().nullable(),
@@ -34,6 +51,8 @@ export const UliHealthCardResponseSchema = z.object({
   reason_codes_negative: z.array(z.string()),
   data_sources_used: z.array(z.string()),
   fraud_flags: z.array(z.string()),
+  confidence: ConfidenceApiSchema,
+  cluster_risk: ClusterRiskApiSchema,
   audit_id: z.string(),
 });
 export type UliHealthCardResponse = z.infer<typeof UliHealthCardResponseSchema>;
@@ -69,6 +88,9 @@ export const CamSchema = z.object({
   reason_codes_positive: z.array(z.string()),
   reason_codes_negative: z.array(z.string()),
   fraud_flags: z.array(z.object({ code: z.string(), severity: z.string(), label: z.string() })),
+  confidence: ConfidenceApiSchema,
+  cluster_risk: ClusterRiskApiSchema,
+  fraud_analytics: FraudAnalyticsApiSchema,
   path_to_credit: z.array(z.object({ action: z.string(), rationale: z.string() })),
   officer_override: z.object({ applied: z.boolean(), reason: z.string().nullable() }),
   audit: z.array(
@@ -77,6 +99,8 @@ export const CamSchema = z.object({
       actor: z.string(),
       action: z.string(),
       detail: z.string().optional(),
+      hash: z.string().optional(),
+      prevHash: z.string().optional(),
     }),
   ),
   disclaimer: z.string(),

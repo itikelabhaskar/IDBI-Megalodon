@@ -5,6 +5,9 @@
 import { generateDataset } from "./generate";
 import type { RawMsme } from "./raw-types";
 import { scoreDataset } from "../scoring/score";
+import { computeFeatures, type FeatureVector } from "../scoring/features";
+import type { ScoreCtx } from "../scoring/scorecard";
+import { simulateScore, type SimResult } from "../scoring/simulate";
 import type { MsmeCase } from "../types";
 
 // Population served to the UI. The generator supports 500–1000 (see the
@@ -31,4 +34,22 @@ export function getCaseById(id: string): MsmeCase | undefined {
 
 export function getRawById(id: string): RawMsme | undefined {
   return getRaws().find((m) => m.profile.msmeId === id);
+}
+
+export interface SimulatorSeed {
+  features: FeatureVector;
+  ctx: ScoreCtx;
+  baseline: SimResult;
+}
+
+/** Base feature vector + context + baseline outcome for the what-if simulator. */
+export function getSimulatorSeed(id: string): SimulatorSeed | undefined {
+  const raw = getRawById(id);
+  if (!raw) return undefined;
+  const features = computeFeatures(raw);
+  const ctx: ScoreCtx = {
+    hasUdyam: !!raw.profile.udyamId,
+    availableSources: raw.dataCompleteness.filter((d) => d.available).length,
+  };
+  return { features, ctx, baseline: simulateScore(features, ctx) };
 }

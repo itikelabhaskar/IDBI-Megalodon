@@ -2,6 +2,7 @@ import type { MsmeCase } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { DecisionPill } from "./decision-pill";
 import { RiskBandChip } from "./risk-band-chip";
+import { ConfidenceBadge } from "./confidence-badge";
 import { formatInr, goNoGo } from "@/lib/format";
 import { OfficerOverrideDialog } from "./officer-override-dialog";
 
@@ -17,10 +18,11 @@ export function DecisionPanel({ data }: { data: MsmeCase }) {
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
             Engine recommendation
           </div>
-          <div className="mt-1 flex items-center gap-2">
+          <div className="mt-1 flex flex-wrap items-center gap-2">
             <DecisionPill decision={data.decision} />
             <span className="text-sm font-semibold text-foreground">{verdict.label}</span>
             <RiskBandChip band={data.riskBand} />
+            <ConfidenceBadge confidence={data.confidence} />
             {cgtmse && (
               <span className="rounded-md border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent">
                 CGTMSE eligible

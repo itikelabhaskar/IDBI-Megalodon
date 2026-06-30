@@ -12,11 +12,16 @@ import type {
   BuyerShare,
   AuditEvent,
   RiskBand,
+  ClusterRisk,
+  ClusterRiskBand,
 } from "../types";
 import { computeFeatures } from "./features";
 import { computeSubScores, computeHealthScore, creditStyleScore, riskBand } from "./scorecard";
 import { scoreMl } from "./ml";
 import { reasonCodes, fraudFlags } from "./reasons";
+import { assessConfidence } from "./confidence";
+import { computeFraudAnalytics } from "./fraud-analytics";
+import { chainAudit } from "../audit-hash";
 import {
   hardFlags,
   breDecision,
@@ -65,6 +70,28 @@ function buildPower(raw: RawMsme): TrendPoint[] {
   return raw.power ? raw.power.map((p) => ({ period: p.month, value: p.unitsKwh })) : [];
 }
 
+function buildFuel(raw: RawMsme): TrendPoint[] {
+  return raw.fuel ? raw.fuel.map((p) => ({ period: p.month, value: p.spend })) : [];
+}
+
+function clusterBand(avg: number): ClusterRiskBand {
+  if (avg >= 70) return "Low";
+  if (avg >= 58) return "Moderate";
+  if (avg >= 48) return "Elevated";
+  return "High";
+}
+
+function makeClusterRisk(cluster: string, scores: number[]): ClusterRisk {
+  const avg = scores.length ? scores.reduce((s, x) => s + x, 0) / scores.length : 0;
+  return {
+    cluster,
+    index: Math.max(0, Math.min(100, Math.round(100 - avg))),
+    band: clusterBand(avg),
+    peerCount: scores.length,
+    avgHealthScore: Math.round(avg),
+  };
+}
+
 function buildBuyers(raw: RawMsme, concentration: number): BuyerShare[] {
   if (!raw.gst) return [];
   const top = Math.min(0.95, concentration);
@@ -86,7 +113,7 @@ function scoredSeconds(raw: RawMsme): number {
 function buildAudit(raw: RawMsme, healthScore: number, band: RiskBand, secs: number): AuditEvent[] {
   const available = raw.dataCompleteness.filter((d) => d.available);
   const fis = available.map((d) => d.source).join(", ");
-  return [
+  return chainAudit([
     {
       ts: "2026-06-28T09:14:00Z",
       actor: "system",
@@ -105,7 +132,7 @@ function buildAudit(raw: RawMsme, healthScore: number, band: RiskBand, secs: num
       action: "HealthScore computed",
       detail: `${healthScore} (Band ${band})`,
     },
-  ];
+  ]);
 }
 
 /** Score a single MSME into the frozen MsmeCase contract. */
@@ -153,6 +180,7 @@ export function scoreCase(raw: RawMsme): MsmeCase {
     subScores,
     mlProbabilityProxy: Math.round(ml.viability * 1000) / 1000,
     contributions: ml.contributions,
+    confidence: assessConfidence(raw, f),
 
     decision,
     recommendedLimit: decision === "Reject" ? 0 : limit,
@@ -168,11 +196,14 @@ export function scoreCase(raw: RawMsme): MsmeCase {
 
     dataCompleteness: raw.dataCompleteness,
     peerClusterPercentile: 50, // overwritten by scoreDataset
+    clusterRisk: makeClusterRisk(raw.profile.clusterCity, [healthScore]), // overwritten by scoreDataset
+    fraudAnalytics: computeFraudAnalytics(raw),
 
     gstTrend: buildGstTrend(raw),
     cashflow: buildCashflow(raw),
     upiTrend: buildUpi(raw),
     powerConsumption: buildPower(raw),
+    fuelConsumption: buildFuel(raw),
     buyerConcentration: buildBuyers(raw, f.gstConcentration),
 
     audit: buildAudit(raw, healthScore, band, secs),
@@ -194,6 +225,22 @@ export function scoreDataset(raws: RawMsme[]): MsmeCase[] {
       const atOrBelow = group.filter((x) => x.healthScore <= c.healthScore).length;
       c.peerClusterPercentile = Math.round((atOrBelow / group.length) * 100);
     }
+  }
+
+  // Geospatial cluster risk — aggregate the HealthScore distribution per cluster
+  // city (no outcome labels), so every case carries its cluster's benchmark.
+  const byCluster = new Map<string, MsmeCase[]>();
+  for (const c of cases) {
+    const arr = byCluster.get(c.clusterCity);
+    if (arr) arr.push(c);
+    else byCluster.set(c.clusterCity, [c]);
+  }
+  for (const [city, group] of byCluster) {
+    const risk = makeClusterRisk(
+      city,
+      group.map((c) => c.healthScore),
+    );
+    for (const c of group) c.clusterRisk = risk;
   }
   return cases;
 }

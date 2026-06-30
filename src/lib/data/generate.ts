@@ -24,6 +24,7 @@ import type {
   UpiMonthly,
   EpfoMonthly,
   PowerMonthly,
+  FuelMonthly,
   BureauLite,
   ArchetypeId,
 } from "./raw-types";
@@ -347,6 +348,58 @@ function genPower(
   }));
 }
 
+// Fuel spend as a share of turnover (₹ fuel per ₹1 lakh of turnover). Logistics-
+// and transport-heavy trading/agro sectors burn more; services almost none.
+const FUEL_INTENSITY: Record<ArchetypeId, number> = {
+  STABLE_TRADER: 1800,
+  THIN_FILE_MICRO: 900,
+  SEASONAL_AGRO: 2200,
+  UPI_MERCHANT: 600,
+  CASHFLOW_STRESS: 2000,
+  FRAUD_SUSPECT: 800,
+  WOMEN_SERVICE: 500,
+  NTC_NO_GST: 1200,
+};
+const FUEL_PRESENT_P: Record<ArchetypeId, number> = {
+  STABLE_TRADER: 0.7,
+  THIN_FILE_MICRO: 0.4,
+  SEASONAL_AGRO: 0.8,
+  UPI_MERCHANT: 0.4,
+  CASHFLOW_STRESS: 0.7,
+  FRAUD_SUSPECT: 0.5,
+  WOMEN_SERVICE: 0.3,
+  NTC_NO_GST: 0.5,
+};
+
+function genFuel(
+  rng: Rng,
+  arch: ArchetypeConfig,
+  periods: string[],
+  gst: GstMonthly[] | null,
+  r: number,
+): FuelMonthly[] {
+  const intensity = FUEL_INTENSITY[arch.id];
+  const noGstBase = arch.upiBase * 1.6;
+  const pricePerLitre = 95;
+  const n = periods.length;
+  return periods.map((month, i) => {
+    const turnover = gst ? gst[i].totalOutward : rng.lognormal(noGstBase, 0.15);
+    // Like power, real operating spend contracts as latent stress rises.
+    const decline = 1 - r * 0.3 * (n > 1 ? i / (n - 1) : 0);
+    const spend = Math.max(
+      0,
+      Math.round(
+        (turnover / 100_000) *
+          intensity *
+          decline *
+          (1 + rng.normal(0, 0.06)) *
+          seasonalFactor(i, arch.seasonal),
+      ),
+    );
+    return { month, spend, litres: Math.round(spend / pricePerLitre) };
+  });
+}
+
 /** Generate one fully-formed synthetic MSME. */
 export function generateMsme(index: number, masterSeed = DEFAULT_SEED): RawMsme {
   const rng = new Rng(masterSeed + index * 1009 + 7);
@@ -413,6 +466,10 @@ export function generateMsme(index: number, masterSeed = DEFAULT_SEED): RawMsme 
     profile.renewalDueFlag = rng.bool(0.4);
   }
 
+  // Fuel is generated LAST so it consumes no RNG draws ahead of any scored
+  // feature — keeping the dataset (and the fitted model.json) byte-identical.
+  const fuel = rng.bool(FUEL_PRESENT_P[arch.id]) ? genFuel(rng, arch, periods, gst, r) : null;
+
   const dataCompleteness: { source: DataSource; available: boolean; monthsCovered?: number }[] = [
     { source: "GST", available: !!gst, monthsCovered: gst ? gst.length : undefined },
     { source: "AA_BANK", available: true, monthsCovered: periods.length },
@@ -429,6 +486,7 @@ export function generateMsme(index: number, masterSeed = DEFAULT_SEED): RawMsme 
     upi,
     epfo,
     power,
+    fuel,
     bureau,
     dataCompleteness,
     latentDefaultPropensity: r,

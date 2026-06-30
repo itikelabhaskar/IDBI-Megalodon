@@ -370,6 +370,46 @@ export function PowerChart({ data }: { data: TrendPoint[] }) {
   );
 }
 
+export function FuelChart({ data }: { data: TrendPoint[] }) {
+  if (!data?.length) return <EmptyChart label="Fuel / operational spend not on file" />;
+  return (
+    <div className="h-56 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
+          <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />
+          <XAxis
+            dataKey="period"
+            tickFormatter={formatPeriod}
+            stroke="var(--color-muted-foreground)"
+            fontSize={11}
+          />
+          <YAxis
+            tickFormatter={(v) => formatInrCompact(v as number)}
+            stroke="var(--color-muted-foreground)"
+            fontSize={11}
+            width={56}
+          />
+          <Tooltip
+            contentStyle={tooltipStyle}
+            labelFormatter={(l) => formatPeriod(l as string)}
+            formatter={(v) => [formatInrCompact(v as number), "Fuel spend"]}
+          />
+          <Legend wrapperStyle={{ fontSize: 11 }} />
+          <Line
+            type="monotone"
+            dataKey="value"
+            name="Fuel spend (₹)"
+            stroke="var(--color-chart-4)"
+            strokeWidth={2}
+            dot={{ r: 2 }}
+            activeDot={{ r: 4 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 /**
  * Power triangulation: turnover IMPLIED by electricity consumption
  * (kWh × ₹/kWh) vs the turnover DECLARED on GST. A large positive gap means the
