@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, UserCog, FlaskConical } from "lucide-react";
+import { UserCog, FlaskConical, UserRound, Settings, LogOut } from "lucide-react";
 
 export function TopBar() {
   const { role, setRole } = useRole();
@@ -24,6 +24,7 @@ export function TopBar() {
         <div className="grid h-7 w-7 place-items-center rounded-md bg-primary text-primary-foreground text-xs font-bold">
           HL
         </div>
+        <span className="text-sm font-semibold text-foreground">HealthLens</span>
       </div>
       <div className="hidden md:flex items-center gap-2 min-w-0">
         <span className="text-sm font-semibold text-foreground">IDBI MSME HealthLens</span>
@@ -39,26 +40,39 @@ export function TopBar() {
           Prototype — synthetic data
         </Badge>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <UserCog className="h-4 w-4" />
-              <span className="hidden sm:inline">{role}</span>
-              <span className="sm:hidden">{role === "Credit Officer" ? "CO" : "RA"}</span>
-              <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel>Switch role</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {roles.map((r) => (
-              <DropdownMenuItem key={r} onClick={() => setRole(r)}>
-                <span className="flex-1">{r}</span>
-                {r === role && <span className="text-xs text-muted-foreground">active</span>}
+        {/* Account menu — mobile only; desktop uses the sidebar user block. */}
+        <div className="md:hidden">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8">
+                <UserCog className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuLabel>Switch role</DropdownMenuLabel>
+              {roles.map((r) => (
+                <DropdownMenuItem key={r} onClick={() => setRole(r)}>
+                  <span className="flex-1">{r}</span>
+                  {r === role && <span className="text-xs text-muted-foreground">active</span>}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <UserRound className="mr-2 h-4 w-4" />
+                Profile
               </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </header>
   );

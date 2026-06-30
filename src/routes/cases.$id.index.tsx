@@ -56,27 +56,24 @@ function HealthCardPage() {
 
         <ReasonCodeList reasons={data.reasonCodes} />
 
-        <ChartPanel title="GST turnover (12m)">
-          <GstTrendChart data={data.gstTrend} />
-        </ChartPanel>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ChartPanel title="GST turnover (12m)">
+            <GstTrendChart data={data.gstTrend} />
+          </ChartPanel>
           <ChartPanel title="Bank cash-flow (12m)">
             <CashflowChart data={data.cashflow} />
           </ChartPanel>
           <ChartPanel title="Digital presence — UPI value / count / refund ratio">
             <UpiTrendChart data={data.upiTrend} />
           </ChartPanel>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ChartPanel title="Electricity consumption (12m, kWh)">
             <PowerChart data={data.powerConsumption} />
           </ChartPanel>
-          <ChartPanel title="Buyer concentration">
-            <BuyerConcentrationChart data={data.buyerConcentration} />
-          </ChartPanel>
         </div>
+
+        <ChartPanel title="Buyer concentration">
+          <BuyerConcentrationChart data={data.buyerConcentration} />
+        </ChartPanel>
       </div>
 
       <aside className="space-y-4 xl:sticky xl:top-4 h-fit">
