@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as QueueRouteImport } from './routes/queue'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as GovernanceRouteImport } from './routes/governance'
+import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CasesIdRouteImport } from './routes/cases.$id'
 import { Route as CasesIdIndexRouteImport } from './routes/cases.$id.index'
@@ -34,6 +35,11 @@ const PortfolioRoute = PortfolioRouteImport.update({
 const GovernanceRoute = GovernanceRouteImport.update({
   id: '/governance',
   path: '/governance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArchitectureRoute = ArchitectureRouteImport.update({
+  id: '/architecture',
+  path: '/architecture',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -79,6 +85,7 @@ const CasesIdCamRoute = CasesIdCamRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/architecture': typeof ArchitectureRoute
   '/governance': typeof GovernanceRoute
   '/portfolio': typeof PortfolioRoute
   '/queue': typeof QueueRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/architecture': typeof ArchitectureRoute
   '/governance': typeof GovernanceRoute
   '/portfolio': typeof PortfolioRoute
   '/queue': typeof QueueRoute
@@ -105,6 +113,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/architecture': typeof ArchitectureRoute
   '/governance': typeof GovernanceRoute
   '/portfolio': typeof PortfolioRoute
   '/queue': typeof QueueRoute
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/architecture'
     | '/governance'
     | '/portfolio'
     | '/queue'
@@ -133,6 +143,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/architecture'
     | '/governance'
     | '/portfolio'
     | '/queue'
@@ -145,6 +156,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/architecture'
     | '/governance'
     | '/portfolio'
     | '/queue'
@@ -159,6 +171,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ArchitectureRoute: typeof ArchitectureRoute
   GovernanceRoute: typeof GovernanceRoute
   PortfolioRoute: typeof PortfolioRoute
   QueueRoute: typeof QueueRoute
@@ -186,6 +199,13 @@ declare module '@tanstack/react-router' {
       path: '/governance'
       fullPath: '/governance'
       preLoaderRoute: typeof GovernanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/architecture': {
+      id: '/architecture'
+      path: '/architecture'
+      fullPath: '/architecture'
+      preLoaderRoute: typeof ArchitectureRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -270,6 +290,7 @@ const CasesIdRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ArchitectureRoute: ArchitectureRoute,
   GovernanceRoute: GovernanceRoute,
   PortfolioRoute: PortfolioRoute,
   QueueRoute: QueueRoute,

@@ -329,6 +329,21 @@ describe("end-to-end on the synthetic population", () => {
     }
   });
 
+  it("computes peer percentile against same-sector local cluster peers when available", () => {
+    const groups = new Map<string, typeof cases>();
+    for (const c of cases) {
+      const key = `${c.sector}::${c.clusterCity}`;
+      const group = groups.get(key);
+      if (group) group.push(c);
+      else groups.set(key, [c]);
+    }
+    const local = [...groups.values()].find((group) => group.length >= 5);
+    expect(local).toBeDefined();
+    const sample = local![0];
+    const atOrBelow = local!.filter((x) => x.healthScore <= sample.healthScore).length;
+    expect(sample.peerClusterPercentile).toBe(Math.round((atOrBelow / local!.length) * 100));
+  });
+
   it("rejects fraud-suspect profiles (GST-vs-bank mismatch)", () => {
     const fraud = cases.filter((c) => archById.get(c.id) === "FRAUD_SUSPECT");
     expect(fraud.length).toBeGreaterThan(0);

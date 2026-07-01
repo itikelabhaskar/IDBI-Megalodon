@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, notFound } from "@tanstack/react-router";
 import { CaseHeader } from "@/components/healthlens/case-header";
+import { CaseAttentionSummary } from "@/components/healthlens/case-attention-summary";
 import { getCase } from "@/lib/mock-cases";
 
 export const Route = createFileRoute("/cases/$id")({
@@ -23,6 +24,7 @@ function CaseLayout() {
   return (
     <div className="flex flex-col">
       <CaseHeader data={data} />
+      <CaseAttentionSummary data={data} />
       <div className="flex-1">
         <Outlet />
       </div>

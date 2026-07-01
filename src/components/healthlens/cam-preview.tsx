@@ -2,6 +2,7 @@ import type { MsmeCase } from "@/lib/types";
 import { formatInr, formatDateTime, sourceLabel } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
+import { missingEvidence, policyGates, primaryConcern, primaryStrength } from "@/lib/case-insights";
 
 export function CamPreview({ data }: { data: MsmeCase }) {
   return (
@@ -80,7 +81,18 @@ export function CamPreview({ data }: { data: MsmeCase }) {
           </ul>
         </Section>
 
-        <Section title="3. Score & limit recommendation">
+        <Section title="3. Officer summary">
+          <KV
+            pairs={[
+              ["Primary strength", primaryStrength(data)],
+              ["Primary concern", primaryConcern(data)],
+              ["Missing evidence", missingEvidence(data)],
+              ["Officer action", data.decision === "Approve" ? "Accept / export CAM" : "Review before sanction"],
+            ]}
+          />
+        </Section>
+
+        <Section title="4. Score & limit recommendation">
           <KV
             pairs={[
               ["HealthScore (0–100)", `${data.healthScore} · Band ${data.riskBand}`],
@@ -99,7 +111,7 @@ export function CamPreview({ data }: { data: MsmeCase }) {
           />
         </Section>
 
-        <Section title="4. Reason codes">
+        <Section title="5. Reason codes">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <ReasonGroup
               title="Positive"
@@ -113,7 +125,20 @@ export function CamPreview({ data }: { data: MsmeCase }) {
           </div>
         </Section>
 
-        <Section title="5. Fraud & data-quality flags">
+        <Section title="6. Policy gates">
+          <ul className="grid grid-cols-1 gap-1 text-sm md:grid-cols-2">
+            {policyGates(data).map((gate) => (
+              <li key={gate.label} className="flex items-start justify-between gap-3 border-b border-dashed border-border py-1">
+                <span>{gate.label}</span>
+                <span className="text-right text-muted-foreground">
+                  {gate.status} · {gate.detail}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Section>
+
+        <Section title="7. Fraud & data-quality flags">
           {data.fraudFlags.length === 0 ? (
             <p className="text-sm text-muted-foreground">No fraud or data-quality flags raised.</p>
           ) : (
@@ -133,7 +158,7 @@ export function CamPreview({ data }: { data: MsmeCase }) {
           )}
         </Section>
 
-        <Section title="6. Officer override">
+        <Section title="8. Officer override">
           <div className="rounded-md border border-dashed border-border px-3 py-6 text-xs text-muted-foreground">
             ▢ Accept engine recommendation &nbsp;&nbsp; ▢ Override to: _______________
             <br />
@@ -145,7 +170,7 @@ export function CamPreview({ data }: { data: MsmeCase }) {
           </div>
         </Section>
 
-        <Section title="7. Audit references">
+        <Section title="9. Audit references">
           <ul className="space-y-0.5 text-xs text-muted-foreground">
             {data.audit.map((e, i) => (
               <li key={i}>
@@ -158,6 +183,8 @@ export function CamPreview({ data }: { data: MsmeCase }) {
         </Section>
 
         <footer className="mt-8 border-t border-border pt-3 text-[10px] text-muted-foreground leading-relaxed">
+          Prepared by HealthLens for officer review; acceptance, rejection, or override remains with
+          IDBI's authorised credit officer. 
           HealthLens is a decision-support and configurable recommendation engine. IDBI remains the
           regulated entity and final decision owner. All figures derive from consented alternate
           data sources for the stated 12-month window. Synthetic prototype data — not for live

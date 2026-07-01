@@ -3,6 +3,8 @@ import { getCase } from "@/lib/mock-cases";
 import { ReasonCodeList } from "@/components/healthlens/reason-code-list";
 import { SubScoreBreakdown } from "@/components/healthlens/sub-score-breakdown";
 import { ContributionChart } from "@/components/healthlens/contribution-chart";
+import { PolicyGateGrid } from "@/components/healthlens/policy-gate-grid";
+import { policyGates } from "@/lib/case-insights";
 
 export const Route = createFileRoute("/cases/$id/explain")({
   loader: ({ params }) => {
@@ -28,6 +30,21 @@ function ExplainPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
+      <section className="rounded-md border border-primary/20 bg-primary/5 p-4">
+        <div className="text-[10px] uppercase tracking-widest text-primary font-semibold">
+          Auditor view
+        </div>
+        <p className="mt-1 text-sm leading-relaxed text-foreground/85">
+          Decision is driven by HealthScore + BRE policy gates. The ML proxy is advisory only and
+          does not override IDBI officer judgment.
+        </p>
+      </section>
+
+      <section className="rounded-md border border-border bg-surface p-4">
+        <div className="mb-3 text-xs font-semibold text-foreground/80">Policy / eligibility gates</div>
+        <PolicyGateGrid gates={policyGates(data)} />
+      </section>
+
       {/* (a) Decision explanation */}
       <section className="rounded-md border border-border bg-surface">
         <header className="border-b border-border px-4 py-3">

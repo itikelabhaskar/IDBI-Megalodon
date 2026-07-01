@@ -12,6 +12,12 @@ export function PeerBenchmark({
   cluster?: string;
   className?: string;
 }) {
+  const band =
+    percentile >= 70
+      ? { label: "Above local peers", className: "text-positive" }
+      : percentile >= 40
+        ? { label: "Near cluster median", className: "text-muted-foreground" }
+        : { label: "Below local peers", className: "text-band-c" };
   return (
     <div className={cn("rounded-md border border-border bg-surface p-3", className)}>
       <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -23,6 +29,7 @@ export function PeerBenchmark({
         </span>
         <span className="font-medium text-foreground tabular-nums">P{percentile}</span>
       </div>
+      <div className={cn("mt-1 text-[11px] font-medium", band.className)}>{band.label}</div>
       <div className="relative mt-2 h-2 rounded-full bg-muted">
         <div
           className="absolute inset-y-0 left-0 bg-primary/20 rounded-full"

@@ -20,13 +20,15 @@ import {
 import { useMemo, useState } from "react";
 import { RiskBandChip } from "./risk-band-chip";
 import { DecisionPill } from "./decision-pill";
-import { formatInrCompact } from "@/lib/format";
+import { formatInrCompact, leadQuality, type LeadQuality } from "@/lib/format";
+import { nextOfficerAction, sourceCoverage, type OfficerAction } from "@/lib/case-insights";
 import { cn } from "@/lib/utils";
 import { Search, ListFilter, Check, ChevronUp, ChevronDown, ChevronsUpDown, X } from "lucide-react";
 
 const ALL = "all";
 
 type SortKey = "name" | "health" | "creditStyle" | "requested" | "recommended";
+type QuickFilter = "all" | "priority" | "inclusion" | "manual" | "fraud" | "missing" | "gem";
 
 export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
   const [q, setQ] = useState("");
@@ -37,6 +39,7 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
   const [route, setRoute] = useState<string>(ALL);
   const [sortKey, setSortKey] = useState<SortKey>("health");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
 
   const sectors = useMemo(() => Array.from(new Set(cases.map((c) => c.sector))).sort(), [cases]);
   const clusters = useMemo(
@@ -57,9 +60,10 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
       if (decision !== ALL && c.decision !== decision) return false;
       if (band !== ALL && c.riskBand !== band) return false;
       if (route !== ALL && c.productRoute !== route) return false;
+      if (quickFilter !== "all" && !matchesQuickFilter(c, quickFilter)) return false;
       return true;
     });
-  }, [cases, q, sector, cluster, decision, band, route]);
+  }, [cases, q, sector, cluster, decision, band, route, quickFilter]);
 
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -93,6 +97,7 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
     decision !== ALL && { label: `Decision: ${decision}`, clear: () => setDecision(ALL) },
     band !== ALL && { label: `Band: ${band}`, clear: () => setBand(ALL) },
     route !== ALL && { label: `Route: ${route}`, clear: () => setRoute(ALL) },
+    quickFilter !== "all" && { label: quickFilterLabel(quickFilter), clear: () => setQuickFilter("all") },
   ].filter(Boolean) as { label: string; clear: () => void }[];
 
   const clearAll = () => {
@@ -101,12 +106,31 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
     setDecision(ALL);
     setBand(ALL);
     setRoute(ALL);
+    setQuickFilter("all");
   };
 
   const sortProps = { sortKey, sortDir, onSort: toggleSort };
 
   return (
     <div className="space-y-3">
+      <div className="flex flex-wrap gap-2">
+        {(["all", "priority", "inclusion", "manual", "fraud", "missing", "gem"] as QuickFilter[]).map((filter) => (
+          <button
+            key={filter}
+            type="button"
+            onClick={() => setQuickFilter(filter)}
+            className={cn(
+              "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+              quickFilter === filter
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-surface text-muted-foreground hover:border-primary/40 hover:text-primary",
+            )}
+          >
+            {quickFilterLabel(filter)}
+          </button>
+        ))}
+      </div>
+
       {/* Slim toolbar: search + active filter chips */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative w-full sm:w-72">
@@ -173,6 +197,7 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
                 <TableHead className="text-right">
                   <SortHeader label="Credit-style" k="creditStyle" align="right" {...sortProps} />
                 </TableHead>
+                <TableHead>Lead</TableHead>
                 <TableHead className="text-right">
                   <SortHeader label="Requested" k="requested" align="right" {...sortProps} />
                 </TableHead>
@@ -190,7 +215,8 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
                 <TableHead>
                   <ColumnFilter label="Route" value={route} onChange={setRoute} options={routes} />
                 </TableHead>
-                <TableHead>Red flag</TableHead>
+                <TableHead>Next action</TableHead>
+                <TableHead>Primary reason</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -200,6 +226,8 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
                   c.fraudFlags.find((f) => f.severity === "warn") ??
                   c.reasonCodes.find((r) => r.polarity === "negative");
                 const avail = c.dataCompleteness.filter((d) => d.available).length;
+                const lead = leadQuality(c);
+                const action = nextOfficerAction(c);
                 return (
                   <TableRow key={c.id} className="group">
                     <TableCell className="py-2.5">
@@ -223,6 +251,9 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
                       </div>
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{c.creditStyleScore}</TableCell>
+                    <TableCell>
+                      <LeadQualityBadge lead={lead} />
+                    </TableCell>
                     <TableCell className="text-right tabular-nums text-muted-foreground">
                       {formatInrCompact(c.requestedAmount)}
                     </TableCell>
@@ -233,6 +264,9 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
                       <DecisionPill decision={c.decision} />
                     </TableCell>
                     <TableCell className="text-xs whitespace-nowrap">{c.productRoute}</TableCell>
+                    <TableCell>
+                      <OfficerActionBadge action={action} />
+                    </TableCell>
                     <TableCell className="text-xs text-muted-foreground max-w-[180px] truncate">
                       {flag ? ("label" in flag ? flag.label : "") : "—"}
                     </TableCell>
@@ -241,7 +275,7 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
               })}
               {sorted.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-8">
+                  <TableCell colSpan={10} className="text-center text-sm text-muted-foreground py-8">
                     No cases match the current filters.
                   </TableCell>
                 </TableRow>
@@ -254,6 +288,78 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
         {sorted.length} of {cases.length} cases
       </div>
     </div>
+  );
+}
+
+function matchesQuickFilter(c: MsmeCase, filter: QuickFilter): boolean {
+  if (filter === "priority") return leadQuality(c).label === "Priority lead";
+  if (filter === "inclusion") return leadQuality(c).label === "Inclusion lead";
+  if (filter === "manual") return nextOfficerAction(c).label === "Review route";
+  if (filter === "fraud") return c.fraudFlags.some((f) => f.severity === "high");
+  if (filter === "missing") return sourceCoverage(c).missing.length > 0;
+  if (filter === "gem") return c.productRoute === "GeM Sahay";
+  return true;
+}
+
+function quickFilterLabel(filter: QuickFilter): string {
+  return filter === "all"
+    ? "All cases"
+    : filter === "priority"
+      ? "Priority leads"
+      : filter === "inclusion"
+        ? "NTC/NTB viable"
+        : filter === "manual"
+          ? "Manual review"
+          : filter === "fraud"
+            ? "Fraud review"
+            : filter === "missing"
+              ? "Missing consent"
+              : "GeM Sahay";
+}
+
+function LeadQualityBadge({ lead }: { lead: LeadQuality }) {
+  const tone =
+    lead.label === "Priority lead"
+      ? "border-positive/30 bg-positive/10 text-positive"
+      : lead.label === "Inclusion lead"
+        ? "border-band-b/30 bg-band-b/10 text-band-b"
+        : lead.label === "Review lead"
+          ? "border-band-c/30 bg-band-c/10 text-band-c"
+          : "border-band-d/30 bg-band-d/10 text-band-d";
+  return (
+    <span
+      title={lead.description}
+      className={cn(
+        "inline-flex whitespace-nowrap rounded-md border px-2 py-0.5 text-[11px] font-medium",
+        tone,
+      )}
+    >
+      {lead.label}
+    </span>
+  );
+}
+
+function OfficerActionBadge({ action }: { action: OfficerAction }) {
+  const tone =
+    action.label === "Check fraud"
+      ? "border-band-d/30 bg-band-d/10 text-band-d"
+      : action.label === "Path to credit"
+        ? "border-band-c/30 bg-band-c/10 text-band-c"
+        : action.label === "Resolve data gap"
+          ? "border-muted-foreground/30 bg-muted text-muted-foreground"
+          : action.label === "Review route"
+            ? "border-band-c/30 bg-band-c/10 text-band-c"
+            : "border-positive/30 bg-positive/10 text-positive";
+  return (
+    <span
+      title={action.description}
+      className={cn(
+        "inline-flex whitespace-nowrap rounded-md border px-2 py-0.5 text-[11px] font-medium",
+        tone,
+      )}
+    >
+      {action.label}
+    </span>
   );
 }
 

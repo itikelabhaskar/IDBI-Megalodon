@@ -1,4 +1,4 @@
-import type { RiskBand, Decision } from "./types";
+import type { RiskBand, Decision, MsmeCase } from "./types";
 
 const inrFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -98,3 +98,39 @@ export const sourceLabel: Record<string, string> = {
   POWER: "Power",
   BUREAU: "Bureau",
 };
+
+export type LeadQuality = {
+  label: "Priority lead" | "Inclusion lead" | "Review lead" | "Watchlist";
+  description: string;
+  rank: number;
+};
+
+export function leadQuality(c: MsmeCase): LeadQuality {
+  const highFraud = c.fraudFlags.some((f) => f.severity === "high");
+  if (c.decision === "Reject" || highFraud) {
+    return {
+      label: "Watchlist",
+      description: "No-Go or high-risk signal; needs path-to-credit / fraud review",
+      rank: 0,
+    };
+  }
+  if (c.ntcNtb) {
+    return {
+      label: "Inclusion lead",
+      description: "Credit-invisible MSME kept in the officer review path",
+      rank: 2,
+    };
+  }
+  if (c.decision === "Approve" && c.healthScore >= 80 && c.peerClusterPercentile >= 60) {
+    return {
+      label: "Priority lead",
+      description: "Go recommendation with above-cluster behaviour pattern",
+      rank: 3,
+    };
+  }
+  return {
+    label: "Review lead",
+    description: "Viable lead with conditions or officer checks",
+    rank: 1,
+  };
+}

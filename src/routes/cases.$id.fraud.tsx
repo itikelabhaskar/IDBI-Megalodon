@@ -2,6 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { getCase } from "@/lib/mock-cases";
 import { FraudFlagList } from "@/components/healthlens/fraud-flag-list";
 import { FraudAnalyticsPanel } from "@/components/healthlens/fraud-analytics-panel";
+import { TriangulationVerdictGrid } from "@/components/healthlens/triangulation-verdict-grid";
 import {
   TriangulationChart,
   PowerTriangulationChart,
@@ -10,6 +11,7 @@ import {
 } from "@/components/healthlens/charts";
 import { RUPEES_PER_KWH, RUPEES_TURNOVER_PER_FUEL } from "@/lib/scoring/features";
 import { formatInrCompact } from "@/lib/format";
+import { triangulationVerdicts } from "@/lib/case-insights";
 
 export const Route = createFileRoute("/cases/$id/fraud")({
   loader: ({ params }) => {
@@ -35,9 +37,29 @@ function FraudPage() {
   const impliedFromFuel = totalFuel * RUPEES_TURNOVER_PER_FUEL;
   const fuelMismatchPct =
     totalGst === 0 ? 0 : Math.round(((totalGst - impliedFromFuel) / totalGst) * 100);
+  const verdicts = triangulationVerdicts(data);
+  const worst = verdicts.some((v) => v.status === "High concern")
+    ? "High concern"
+    : verdicts.some((v) => v.status === "Review")
+      ? "Moderate concern"
+      : "Pass";
 
   return (
     <div className="p-4 md:p-6 space-y-6">
+      <section className="rounded-md border border-border bg-surface p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Investigation verdict
+            </div>
+            <h2 className="mt-1 text-base font-semibold text-foreground">Triangulation: {worst}</h2>
+          </div>
+        </div>
+        <div className="mt-3">
+          <TriangulationVerdictGrid verdicts={verdicts} />
+        </div>
+      </section>
+
       <section className="rounded-md border border-border bg-surface">
         <header className="border-b border-border px-4 py-3">
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">

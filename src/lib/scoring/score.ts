@@ -211,20 +211,26 @@ export function scoreCase(raw: RawMsme): MsmeCase {
   };
 }
 
-/** Score a whole population and fill peer/cluster percentiles within each sector. */
+/** Score a whole population and fill peer/cluster percentiles using local peers when possible. */
 export function scoreDataset(raws: RawMsme[]): MsmeCase[] {
   const cases = raws.map(scoreCase);
   const bySector = new Map<string, MsmeCase[]>();
+  const bySectorCluster = new Map<string, MsmeCase[]>();
   for (const c of cases) {
     const arr = bySector.get(c.sector);
     if (arr) arr.push(c);
     else bySector.set(c.sector, [c]);
+
+    const clusterKey = `${c.sector}::${c.clusterCity}`;
+    const clusterArr = bySectorCluster.get(clusterKey);
+    if (clusterArr) clusterArr.push(c);
+    else bySectorCluster.set(clusterKey, [c]);
   }
-  for (const group of bySector.values()) {
-    for (const c of group) {
-      const atOrBelow = group.filter((x) => x.healthScore <= c.healthScore).length;
-      c.peerClusterPercentile = Math.round((atOrBelow / group.length) * 100);
-    }
+  for (const c of cases) {
+    const local = bySectorCluster.get(`${c.sector}::${c.clusterCity}`) ?? [];
+    const group = local.length >= 5 ? local : (bySector.get(c.sector) ?? local);
+    const atOrBelow = group.filter((x) => x.healthScore <= c.healthScore).length;
+    c.peerClusterPercentile = Math.round((atOrBelow / group.length) * 100);
   }
 
   // Geospatial cluster risk — aggregate the HealthScore distribution per cluster

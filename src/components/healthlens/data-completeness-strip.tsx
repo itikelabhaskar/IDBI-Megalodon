@@ -12,7 +12,7 @@ export function DataCompletenessStrip({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-center gap-1.5", className)}>
+    <div className={cn("flex max-w-full flex-wrap items-center gap-1.5", className)}>
       {items.map((d) => (
         <div
           key={d.source}
@@ -22,7 +22,7 @@ export function DataCompletenessStrip({
               : "missing"
           }`}
           className={cn(
-            "flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-medium",
+            "flex min-w-0 items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-medium",
             d.available
               ? "border-band-a/30 bg-band-a/10 text-band-a"
               : "border-border bg-muted text-muted-foreground line-through",

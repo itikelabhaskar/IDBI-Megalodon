@@ -3,9 +3,19 @@ import type { RiskBand } from "@/lib/types";
 import { listCases } from "@/lib/mock-cases";
 import { getDemoCases } from "@/lib/analytics/portfolio";
 import { RiskBandChip } from "@/components/healthlens/risk-band-chip";
-import { formatInrCompact } from "@/lib/format";
+import { formatInrCompact, leadQuality } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { ArrowRight, ShieldAlert, TrendingUp, Layers, CheckCircle2 } from "lucide-react";
+import {
+  ArrowRight,
+  ShieldAlert,
+  TrendingUp,
+  Layers,
+  CheckCircle2,
+  Workflow,
+  Plug,
+  FileCheck2,
+  Landmark,
+} from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -32,12 +42,22 @@ function DashboardPage() {
   let healthSum = 0;
   let requestedSum = 0;
   let recommendedSum = 0;
+  let ntcNtb = 0;
+  let ntcNtbNotRejected = 0;
+  let powerAvailable = 0;
+  let goodLeads = 0;
   const bands: Record<RiskBand, number> = { A: 0, B: 0, C: 0, D: 0 };
   for (const c of cases) {
     if (c.decision === "Approve") approve++;
     else if (c.decision === "Refer") refer++;
     else reject++;
     if (c.fraudFlags.some((f) => f.severity === "high")) flagged++;
+    if (c.ntcNtb) {
+      ntcNtb++;
+      if (c.decision !== "Reject") ntcNtbNotRejected++;
+    }
+    if (c.dataCompleteness.some((d) => d.source === "POWER" && d.available)) powerAvailable++;
+    if (leadQuality(c).rank >= 2) goodLeads++;
     healthSum += c.healthScore;
     requestedSum += c.requestedAmount;
     recommendedSum += c.recommendedLimit;
@@ -53,19 +73,73 @@ function DashboardPage() {
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
             Credit officer workspace
           </div>
-          <h1 className="mt-1 text-xl font-semibold text-foreground">Dashboard</h1>
+          <h1 className="mt-1 text-xl font-semibold text-foreground">
+            MSME credit intelligence cockpit
+          </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {cases.length} MSME applications scored from consented alternate data.
+            {cases.length} MSME applications scored from consented alternate data, ready for an
+            IDBI-style officer review.
           </p>
         </div>
-        <Link
-          to="/queue"
-          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          Open case queue
-          <ArrowRight className="h-4 w-4" />
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            to="/architecture"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+          >
+            Pilot architecture
+            <Workflow className="h-4 w-4" />
+          </Link>
+          <Link
+            to="/queue"
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Open case queue
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </header>
+
+      <section className="rounded-md border border-primary/20 bg-primary/5 p-4">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Landmark className="h-4 w-4 text-primary" />
+              Built around IDBI's Track 03 ask
+            </div>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              The prototype is positioned as a pilot-ready decision-support layer: alternate-data
+              health card, Go / Conditional / No-Go recommendation, human underwriter ownership,
+              and sandbox-ready integrations.
+            </p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            <ProofCard
+              icon={<Layers className="h-4 w-4" />}
+              title="Alternate data"
+              value="6 sources"
+              detail={`${powerAvailable} cases include DISCOM power signal`}
+            />
+            <ProofCard
+              icon={<TrendingUp className="h-4 w-4" />}
+              title="Good leads"
+              value={String(goodLeads)}
+              detail="priority and inclusion leads ready for officer action"
+            />
+            <ProofCard
+              icon={<FileCheck2 className="h-4 w-4" />}
+              title="Underwriter proof"
+              value="CAM + audit"
+              detail="decision reasons and override trail visible"
+            />
+            <ProofCard
+              icon={<Plug className="h-4 w-4" />}
+              title="Sandbox path"
+              value="ULI / OCEN"
+              detail="connector stubs ready to swap after shortlist"
+            />
+          </div>
+        </div>
+      </section>
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -83,9 +157,9 @@ function DashboardPage() {
         />
         <Kpi
           icon={<CheckCircle2 className="h-4 w-4 text-band-a" />}
-          label="Straight-through"
-          value={String(approve)}
-          sub={`${pct(approve)}% recommended Approve`}
+          label="NTC / NTB retained"
+          value={`${ntcNtbNotRejected}/${ntcNtb || 1}`}
+          sub="credit-invisible cases not auto-rejected"
         />
         <Kpi
           icon={<ShieldAlert className="h-4 w-4 text-band-d" />}
@@ -182,6 +256,29 @@ function Kpi({
       </div>
       <div className="mt-2 text-2xl font-semibold tabular-nums text-foreground">{value}</div>
       <div className="mt-0.5 text-[11px] text-muted-foreground">{sub}</div>
+    </div>
+  );
+}
+
+function ProofCard({
+  icon,
+  title,
+  value,
+  detail,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-md border border-primary/15 bg-surface p-3">
+      <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+        <span className="text-primary">{icon}</span>
+        {title}
+      </div>
+      <div className="mt-2 text-base font-semibold text-foreground">{value}</div>
+      <div className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{detail}</div>
     </div>
   );
 }

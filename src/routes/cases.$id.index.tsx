@@ -38,7 +38,7 @@ function HealthCardPage() {
               <CreditStyleBadge score={data.creditStyleScore} />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="text-xs font-semibold text-foreground/80">Sub-scores</div>
                 <DataCompletenessStrip items={data.dataCompleteness} />
               </div>
