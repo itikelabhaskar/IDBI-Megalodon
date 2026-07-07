@@ -39,31 +39,37 @@ npm run lint     # lint
 
 ## Deployment
 
-`npm run build` produces a Vite + Nitro build in `.output/` (verified working, ~0.3s).
+`npm run build` produces a Vite + Nitro build. The default target is **Vercel** (emits the Vercel
+Build Output API to `.vercel/output/`); set `NITRO_PRESET` to target other hosts.
 
-### Cloudflare (default, verified green)
+### Vercel (default, verified green)
 
-The default build targets Cloudflare Workers via Nitro and works out of the box. After
-`npm run build`, deploy with `npx wrangler deploy`. **This is the recommended demo target.**
+The build targets Vercel out of the box and Nitro emits `.vercel/output/`. To deploy:
 
-### AWS / Node / Docker (bank-sandbox target)
+1. Push to GitHub.
+2. On [vercel.com](https://vercel.com) → **Add New → Project** → import this repo.
+3. Framework Preset **Other**, Build Command `npm run build`, Install Command `npm install`.
+4. Deploy — Vercel auto-detects `.vercel/output` and serves it. (`vercel.json` already pins
+   `NITRO_PRESET=vercel`.)
 
-The server is a portable Nitro handler. Set `NITRO_PRESET=node-server` (or `aws-lambda`) before
-`npm run build` to emit a Node/Lambda bundle you can run on **AWS** (Lambda + CloudFront, Amplify,
-or ECS/Fargate via Docker). All prototype data is synthetic and in-process, so no managed
-datastore is required to run the demo.
+Dependencies are bundled into the serverless function (`noExternals`), which sidesteps the
+Nitro-3.0-beta `@vercel/nft` tracing bug — so the serverless build is reliable.
 
-### Vercel (optional)
+### Cloudflare / AWS / Node (alternative targets)
 
-`vercel.json` sets `NITRO_PRESET=vercel`. Note: the bundled Nitro 3.0-beta has a known upstream
-`@vercel/nft` dependency-tracing issue that can break the serverless build — prefer the Cloudflare
-or Node/AWS paths above for a guaranteed-green deploy.
+The server is a portable Nitro handler. Set `NITRO_PRESET` before `npm run build`:
+
+- `cloudflare-module` → `npx wrangler deploy` (Cloudflare Workers)
+- `node-server` → run the Node bundle in `.output/` (Docker / ECS / any VM)
+- `aws-lambda` → AWS Lambda + CloudFront / Amplify
+
+All prototype data is synthetic and in-process, so no managed datastore is required.
 
 ### Cloud portability
 
 HealthLens is cloud-agnostic: the frontend compiles to static client assets and the server is a
-portable Nitro handler with presets for AWS Lambda, Node, Azure, Netlify, and Cloudflare — the
-same codebase deploys to any of them with only a preset change.
+portable Nitro handler with presets for Vercel, AWS Lambda, Node, Azure, Netlify, and Cloudflare —
+the same codebase deploys to any of them with only a preset change.
 
 ## Status
 
