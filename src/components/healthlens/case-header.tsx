@@ -2,7 +2,7 @@ import type { MsmeCase } from "@/lib/types";
 import type { ClusterRisk } from "@/lib/types";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
-import { formatInrCompact, goNoGo } from "@/lib/format";
+import { formatInrCompact, goNoGo, decisionToneSolid } from "@/lib/format";
 import { RiskBandChip } from "./risk-band-chip";
 import { DecisionPill } from "./decision-pill";
 import { ConfidenceBadge } from "./confidence-badge";
@@ -35,14 +35,17 @@ export function CaseHeader({ data }: { data: MsmeCase }) {
   const verdict = goNoGo[data.decision];
 
   return (
-    <div className="z-30 border-b border-border bg-surface/95 backdrop-blur md:sticky md:top-0" data-no-print="true">
+    <div
+      className="z-30 border-b border-border bg-surface/95 backdrop-blur md:sticky md:top-0"
+      data-no-print="true"
+    >
       <div className="px-4 pt-3 pb-2 md:px-6">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="truncate text-lg font-semibold text-foreground">{data.legalName}</h1>
-              <RiskBandChip band={data.riskBand} />
-              <DecisionPill decision={data.decision} />
+              <RiskBandChip band={data.riskBand} size="md" />
+              <DecisionPill decision={data.decision} variant="solid" size="md" />
               {data.womenOwned && (
                 <span className="rounded-md border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent">
                   Women-owned
@@ -86,7 +89,12 @@ export function CaseHeader({ data }: { data: MsmeCase }) {
           <span className="shrink-0 text-[10px] uppercase tracking-widest text-muted-foreground">
             Underwriter view
           </span>
-          <span className="shrink-0 rounded-md bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
+          <span
+            className={cn(
+              "shrink-0 rounded-md border px-2.5 py-1 text-xs font-bold uppercase tracking-wide",
+              decisionToneSolid[data.decision],
+            )}
+          >
             {verdict.label}
           </span>
           <span className="min-w-0 flex-[1_1_160px] truncate text-[11px] text-muted-foreground">
@@ -98,7 +106,11 @@ export function CaseHeader({ data }: { data: MsmeCase }) {
           />
           <CommandStat label="Requested" value={formatInrCompact(data.requestedAmount)} muted />
           <CommandStat label="HealthScore" value={`${data.healthScore}/100`} />
-          <CommandStat label="ML proxy" value={`${(data.mlProbabilityProxy * 100).toFixed(0)}%`} muted />
+          <CommandStat
+            label="ML proxy"
+            value={`${(data.mlProbabilityProxy * 100).toFixed(0)}%`}
+            muted
+          />
           <span className="inline-flex min-w-0 max-w-full shrink-0 items-center gap-1.5 rounded-md border border-primary/20 bg-primary/5 px-2 py-1 text-[11px] text-primary sm:w-36">
             <Route className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{data.productRoute}</span>

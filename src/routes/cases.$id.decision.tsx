@@ -2,6 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { getCase } from "@/lib/mock-cases";
 import { getSimulatorSeed, type SimulatorSeed } from "@/lib/data/dataset";
 import { DecisionPanel } from "@/components/healthlens/decision-panel";
+import { DecisionWorkflowPanel } from "@/components/healthlens/decision-workflow-panel";
 import { ProductRoutingCard } from "@/components/healthlens/product-routing-card";
 import { PathToCreditPanel } from "@/components/healthlens/path-to-credit-panel";
 import { WhatIfSimulator } from "@/components/healthlens/what-if-simulator";
@@ -43,6 +44,7 @@ function DecisionPage() {
         </div>
       </section>
       <DecisionPanel data={data} />
+      <DecisionWorkflowPanel data={data} />
       <section className="rounded-md border border-border bg-surface p-4">
         <div className="mb-3 text-xs font-semibold text-foreground/80">Policy gates</div>
         <PolicyGateGrid gates={policyGates(data)} />

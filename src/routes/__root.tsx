@@ -9,8 +9,8 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { RoleProvider } from "@/lib/role-context";
+import { WorkflowProvider } from "@/lib/workflow";
 import { AppShell } from "@/components/healthlens/app-shell";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,8 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    // Local, in-app error logging only — no third-party telemetry (DPDP-safe).
+    console.error("[HealthLens] root error boundary:", error);
   }, [error]);
 
   return (
@@ -122,10 +123,12 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <RoleProvider>
-        <AppShell>
-          <Outlet />
-        </AppShell>
-        <Toaster richColors closeButton position="bottom-right" />
+        <WorkflowProvider>
+          <AppShell>
+            <Outlet />
+          </AppShell>
+          <Toaster richColors closeButton position="bottom-right" />
+        </WorkflowProvider>
       </RoleProvider>
     </QueryClientProvider>
   );

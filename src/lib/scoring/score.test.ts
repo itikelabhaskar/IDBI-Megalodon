@@ -35,6 +35,8 @@ function feat(over: Partial<FeatureVector> = {}): FeatureVector {
     gstOnTimeRatio: 0.95,
     gstZeroReturnRatio: 0,
     gstConcentration: 0.3,
+    hasPurchaseData: true,
+    purchaseToSaleRatio: 0.7,
     bankMonthlyCreditAvg: 1_900_000,
     bankCreditVolatility: 0.1,
     emiBounceCount: 0,

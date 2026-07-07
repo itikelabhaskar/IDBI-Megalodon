@@ -99,6 +99,25 @@ function DashboardPage() {
         </div>
       </header>
 
+      {/* Business-impact headline — the numbers IDBI cares about */}
+      <section className="grid gap-3 rounded-md border border-primary/25 bg-gradient-to-br from-primary/10 to-primary/5 p-4 sm:grid-cols-3">
+        <ImpactStat
+          value={formatInrCompact(recommendedSum)}
+          label="Credit ready to deploy"
+          sub={`across ${approve + refer} advanceable cases`}
+        />
+        <ImpactStat
+          value={`${ntcNtbNotRejected}/${ntcNtb || 1}`}
+          label="Credit-invisible MSMEs included"
+          sub={`${Math.round((ntcNtbNotRejected / (ntcNtb || 1)) * 100)}% of NTC/NTB kept in the funnel`}
+        />
+        <ImpactStat
+          value={String(goodLeads)}
+          label="Good leads surfaced"
+          sub="priority + inclusion leads for officer action"
+        />
+      </section>
+
       <section className="rounded-md border border-primary/20 bg-primary/5 p-4">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]">
           <div>
@@ -108,8 +127,8 @@ function DashboardPage() {
             </div>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
               The prototype is positioned as a pilot-ready decision-support layer: alternate-data
-              health card, Go / Conditional / No-Go recommendation, human underwriter ownership,
-              and sandbox-ready integrations.
+              health card, Go / Conditional / No-Go recommendation, human underwriter ownership, and
+              sandbox-ready integrations.
             </p>
           </div>
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
@@ -233,6 +252,16 @@ function DashboardPage() {
           </div>
         </Panel>
       )}
+    </div>
+  );
+}
+
+function ImpactStat({ value, label, sub }: { value: string; label: string; sub: string }) {
+  return (
+    <div className="min-w-0">
+      <div className="text-2xl font-bold tabular-nums text-primary">{value}</div>
+      <div className="mt-0.5 text-sm font-semibold text-foreground">{label}</div>
+      <div className="text-[11px] text-muted-foreground">{sub}</div>
     </div>
   );
 }

@@ -9,7 +9,7 @@ import {
   FuelChart,
   UpiTrendChart,
 } from "@/components/healthlens/charts";
-import { RUPEES_PER_KWH, RUPEES_TURNOVER_PER_FUEL } from "@/lib/scoring/features";
+import { rupeesPerKwh, rupeesTurnoverPerFuel } from "@/lib/data/sector-intensity";
 import { formatInrCompact } from "@/lib/format";
 import { triangulationVerdicts } from "@/lib/case-insights";
 
@@ -30,11 +30,11 @@ function FraudPage() {
   const totalBank = data.cashflow.reduce((s, p) => s + p.inflow, 0);
   const mismatchPct = totalGst === 0 ? 0 : Math.round(((totalGst - totalBank) / totalGst) * 100);
   const totalPowerKwh = data.powerConsumption.reduce((s, p) => s + p.value, 0);
-  const impliedFromPower = totalPowerKwh * RUPEES_PER_KWH;
+  const impliedFromPower = totalPowerKwh * rupeesPerKwh(data.sector);
   const powerMismatchPct =
     totalGst === 0 ? 0 : Math.round(((totalGst - impliedFromPower) / totalGst) * 100);
   const totalFuel = data.fuelConsumption.reduce((s, p) => s + p.value, 0);
-  const impliedFromFuel = totalFuel * RUPEES_TURNOVER_PER_FUEL;
+  const impliedFromFuel = totalFuel * rupeesTurnoverPerFuel(data.sector);
   const fuelMismatchPct =
     totalGst === 0 ? 0 : Math.round(((totalGst - impliedFromFuel) / totalGst) * 100);
   const verdicts = triangulationVerdicts(data);

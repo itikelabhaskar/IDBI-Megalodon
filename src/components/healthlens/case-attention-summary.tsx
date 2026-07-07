@@ -23,7 +23,10 @@ export function CaseAttentionSummary({ data }: { data: MsmeCase }) {
         : `/cases/${data.id}/decision`;
 
   return (
-    <section data-no-print="true" className="border-b border-border bg-background px-4 py-3 md:px-6">
+    <section
+      data-no-print="true"
+      className="border-b border-border bg-background px-4 py-3 md:px-6"
+    >
       <div className="grid gap-3 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] xl:items-stretch">
         <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -45,9 +48,24 @@ export function CaseAttentionSummary({ data }: { data: MsmeCase }) {
         </div>
 
         <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-3">
-          <SummaryTile icon={<CheckCircle2 className="h-4 w-4" />} label="Primary strength" value={primaryStrength(data)} tone="positive" />
-          <SummaryTile icon={<AlertTriangle className="h-4 w-4" />} label="Primary concern" value={primaryConcern(data)} tone="warn" />
-          <SummaryTile icon={<ClipboardCheck className="h-4 w-4" />} label="Evidence" value={missingEvidence(data)} tone="neutral" />
+          <SummaryTile
+            icon={<CheckCircle2 className="h-4 w-4" />}
+            label="Primary strength"
+            value={primaryStrength(data)}
+            tone="positive"
+          />
+          <SummaryTile
+            icon={<AlertTriangle className="h-4 w-4" />}
+            label="Primary concern"
+            value={primaryConcern(data)}
+            tone="warn"
+          />
+          <SummaryTile
+            icon={<ClipboardCheck className="h-4 w-4" />}
+            label="Evidence"
+            value={missingEvidence(data)}
+            tone="neutral"
+          />
         </div>
 
         <Link

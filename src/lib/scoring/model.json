@@ -1,5 +1,5 @@
 {
-  "intercept": -1.3688,
+  "intercept": -1.3657,
   "terms": {
     "gstOnTimeRatio": {
       "mean": 0.748,
@@ -9,22 +9,22 @@
     "bankCreditVolatility": {
       "mean": 0.2928,
       "std": 0.1704,
-      "weight": 0.0433
+      "weight": 0.0702
     },
     "emiBounceCount": {
       "mean": 3.0971,
       "std": 3.8585,
-      "weight": 0.2851
+      "weight": 0.2562
     },
     "gstBankTurnoverGap": {
       "mean": 0.1002,
       "std": 0.1766,
-      "weight": 0.1537
+      "weight": 0.0679
     },
     "upiRefundRatio": {
       "mean": 0.03,
       "std": 0.0218,
-      "weight": 0.0838
+      "weight": 0.1033
     },
     "debtServiceRatio": {
       "mean": 0.0985,
@@ -34,7 +34,7 @@
     "dpdDays": {
       "mean": 14.6696,
       "std": 25.633,
-      "weight": 0.0879
+      "weight": 0.0814
     },
     "epfoMissingMonthRatio": {
       "mean": 0.0848,
@@ -44,12 +44,12 @@
     "gstConcentration": {
       "mean": 0.4559,
       "std": 0.1782,
-      "weight": 0.486
+      "weight": 0.4563
     },
     "upiTrend": {
       "mean": 0.0367,
       "std": 0.1596,
-      "weight": -0.094
+      "weight": -0.0989
     },
     "powerTrend": {
       "mean": -0.0293,
@@ -57,15 +57,15 @@
       "weight": 0
     },
     "turnoverPowerGap": {
-      "mean": -0.0608,
-      "std": 0.3443,
-      "weight": 0
+      "mean": 0.0602,
+      "std": 0.1733,
+      "weight": 0.163
     }
   },
   "metrics": {
-    "auc": 0.7433,
-    "ks": 0.3784,
-    "gini": 0.4865,
+    "auc": 0.7449,
+    "ks": 0.3609,
+    "gini": 0.4898,
     "trainN": 700,
     "testN": 300,
     "defaultRateTrain": 0.2386

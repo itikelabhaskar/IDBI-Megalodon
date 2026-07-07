@@ -21,7 +21,14 @@ import { useMemo, useState } from "react";
 import { RiskBandChip } from "./risk-band-chip";
 import { DecisionPill } from "./decision-pill";
 import { formatInrCompact, leadQuality, type LeadQuality } from "@/lib/format";
-import { nextOfficerAction, sourceCoverage, type OfficerAction } from "@/lib/case-insights";
+import {
+  nextOfficerAction,
+  sourceCoverage,
+  caseAgeing,
+  ageingLabel,
+  type OfficerAction,
+} from "@/lib/case-insights";
+import { useWorkflow, statusTone } from "@/lib/workflow";
 import { cn } from "@/lib/utils";
 import { Search, ListFilter, Check, ChevronUp, ChevronDown, ChevronsUpDown, X } from "lucide-react";
 
@@ -31,6 +38,7 @@ type SortKey = "name" | "health" | "creditStyle" | "requested" | "recommended";
 type QuickFilter = "all" | "priority" | "inclusion" | "manual" | "fraud" | "missing" | "gem";
 
 export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
+  const { map: workflowMap } = useWorkflow();
   const [q, setQ] = useState("");
   const [sector, setSector] = useState<string>(ALL);
   const [cluster, setCluster] = useState<string>(ALL);
@@ -97,7 +105,10 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
     decision !== ALL && { label: `Decision: ${decision}`, clear: () => setDecision(ALL) },
     band !== ALL && { label: `Band: ${band}`, clear: () => setBand(ALL) },
     route !== ALL && { label: `Route: ${route}`, clear: () => setRoute(ALL) },
-    quickFilter !== "all" && { label: quickFilterLabel(quickFilter), clear: () => setQuickFilter("all") },
+    quickFilter !== "all" && {
+      label: quickFilterLabel(quickFilter),
+      clear: () => setQuickFilter("all"),
+    },
   ].filter(Boolean) as { label: string; clear: () => void }[];
 
   const clearAll = () => {
@@ -114,7 +125,9 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {(["all", "priority", "inclusion", "manual", "fraud", "missing", "gem"] as QuickFilter[]).map((filter) => (
+        {(
+          ["all", "priority", "inclusion", "manual", "fraud", "missing", "gem"] as QuickFilter[]
+        ).map((filter) => (
           <button
             key={filter}
             type="button"
@@ -228,6 +241,8 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
                 const avail = c.dataCompleteness.filter((d) => d.available).length;
                 const lead = leadQuality(c);
                 const action = nextOfficerAction(c);
+                const age = caseAgeing(c.id);
+                const wf = workflowMap[c.id];
                 return (
                   <TableRow key={c.id} className="group">
                     <TableCell className="py-2.5">
@@ -241,6 +256,19 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
                         </div>
                         <div className="text-[11px] text-muted-foreground truncate">
                           {c.sector} · {c.clusterCity} · {avail}/{c.dataCompleteness.length} sources
+                          ·{" "}
+                          <span
+                            className={cn(
+                              age.sla === "Breached"
+                                ? "text-band-d"
+                                : age.sla === "Due soon"
+                                  ? "text-band-c"
+                                  : "text-muted-foreground",
+                            )}
+                            title={`SLA ${age.sla} · received ${ageingLabel(age.hoursAgo)}`}
+                          >
+                            {ageingLabel(age.hoursAgo)}
+                          </span>
                         </div>
                       </Link>
                     </TableCell>
@@ -261,7 +289,19 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
                       {c.recommendedLimit > 0 ? formatInrCompact(c.recommendedLimit) : "—"}
                     </TableCell>
                     <TableCell>
-                      <DecisionPill decision={c.decision} />
+                      <div className="flex flex-col items-start gap-1">
+                        <DecisionPill decision={c.decision} />
+                        {wf && wf.status !== "New" && (
+                          <span
+                            className={cn(
+                              "inline-flex items-center rounded border px-1.5 py-0.5 text-[9px] font-semibold",
+                              statusTone[wf.status],
+                            )}
+                          >
+                            {wf.status}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-xs whitespace-nowrap">{c.productRoute}</TableCell>
                     <TableCell>
@@ -275,7 +315,10 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
               })}
               {sorted.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center text-sm text-muted-foreground py-8">
+                  <TableCell
+                    colSpan={10}
+                    className="text-center text-sm text-muted-foreground py-8"
+                  >
                     No cases match the current filters.
                   </TableCell>
                 </TableRow>

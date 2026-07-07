@@ -78,9 +78,16 @@ function genGst(
     const totalOutward = Math.max(0, Math.round(rng.lognormal(base, arch.gstVol) * dip));
     const zeroReturn = rng.bool(arch.zeroReturnRate);
     const delayed = rng.bool(Math.min(0.95, arch.gstDelayRate + r * 0.45));
+    const outward = zeroReturn ? 0 : totalOutward;
+    // Inward / purchases (ITC base). Derived DETERMINISTICALLY from sales so it
+    // consumes no RNG draws — keeping the dataset (and fitted model.json) stable.
+    // Month-of-year adds a mild wobble; fraud archetypes buy little vs claimed sales.
+    const wob = 0.9 + ((period.charCodeAt(5) + period.charCodeAt(6)) % 20) / 100;
+    const totalInward = Math.round(outward * arch.purchaseRatio * wob);
     return {
       period,
-      totalOutward: zeroReturn ? 0 : totalOutward,
+      totalOutward: outward,
+      totalInward,
       totalTax: zeroReturn ? 0 : Math.round(totalOutward * 0.18),
       filingDate: day(period, rng),
       delayedFlag: delayed,

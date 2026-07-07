@@ -82,6 +82,13 @@ export const decisionTone: Record<Decision, string> = {
   Reject: "bg-band-d/15 text-band-d border-band-d/30",
 };
 
+// Loud, filled variant for the single most important output — the credit decision.
+export const decisionToneSolid: Record<Decision, string> = {
+  Approve: "bg-band-a text-white border-band-a shadow-sm",
+  Refer: "bg-band-c text-black/85 border-band-c shadow-sm",
+  Reject: "bg-band-d text-white border-band-d shadow-sm",
+};
+
 // IDBI's AMA framing of the recommendation as a "yes-go / no-go" call, driven by
 // the applicant's observed behaviour pattern.
 export const goNoGo: Record<Decision, { label: string; hint: string }> = {

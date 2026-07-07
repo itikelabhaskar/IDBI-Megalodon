@@ -39,11 +39,36 @@ function QueuePage() {
         </p>
       </header>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <QueueMetric icon={<CheckCircle2 className="h-4 w-4 text-positive" />} label="Priority leads" value={priority} detail="Go + strong local signal" />
-        <QueueMetric icon={<UsersRound className="h-4 w-4 text-band-b" />} label="Inclusion leads" value={inclusion} detail="NTC/NTB kept in funnel" />
-        <QueueMetric icon={<FileWarning className="h-4 w-4 text-band-c" />} label="Manual review" value={manual} detail="Officer action needed" />
-        <QueueMetric icon={<ShieldAlert className="h-4 w-4 text-band-d" />} label="High-risk flags" value={highRisk} detail="Triangulation review" />
-        <QueueMetric icon={<AlertTriangle className="h-4 w-4 text-muted-foreground" />} label="Missing evidence" value={missing} detail="At least one source gap" />
+        <QueueMetric
+          icon={<CheckCircle2 className="h-4 w-4 text-positive" />}
+          label="Priority leads"
+          value={priority}
+          detail="Go + strong local signal"
+        />
+        <QueueMetric
+          icon={<UsersRound className="h-4 w-4 text-band-b" />}
+          label="Inclusion leads"
+          value={inclusion}
+          detail="NTC/NTB kept in funnel"
+        />
+        <QueueMetric
+          icon={<FileWarning className="h-4 w-4 text-band-c" />}
+          label="Manual review"
+          value={manual}
+          detail="Officer action needed"
+        />
+        <QueueMetric
+          icon={<ShieldAlert className="h-4 w-4 text-band-d" />}
+          label="High-risk flags"
+          value={highRisk}
+          detail="Triangulation review"
+        />
+        <QueueMetric
+          icon={<AlertTriangle className="h-4 w-4 text-muted-foreground" />}
+          label="Missing evidence"
+          value={missing}
+          detail="At least one source gap"
+        />
       </div>
       <CaseQueueTable cases={cases} />
     </div>

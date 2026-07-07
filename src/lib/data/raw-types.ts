@@ -47,6 +47,7 @@ export interface RawProfile {
 export interface GstMonthly {
   period: string; // YYYY-MM
   totalOutward: number;
+  totalInward: number; // inward / purchases (ITC base) reported for the month
   totalTax: number;
   filingDate: string;
   delayedFlag: boolean;

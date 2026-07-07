@@ -5,6 +5,7 @@ import {
   Workflow,
   ShieldCheck,
   BarChart3,
+  Sparkles,
   ChevronsUpDown,
   UserRound,
   Settings,
@@ -13,6 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useRole, type Role } from "@/lib/role-context";
+import { BrandLockup } from "./brand";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -34,6 +36,12 @@ const NAV: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["Credit Officer", "Risk Admin"] },
   { to: "/queue", label: "Case Queue", icon: LayoutGrid, roles: ["Credit Officer", "Risk Admin"] },
   {
+    to: "/score",
+    label: "Score Applicant",
+    icon: Sparkles,
+    roles: ["Credit Officer", "Risk Admin"],
+  },
+  {
     to: "/architecture",
     label: "Pilot Architecture",
     icon: Workflow,
@@ -44,24 +52,23 @@ const NAV: NavItem[] = [
 ];
 
 export function Sidebar() {
-  const { role, setRole } = useRole();
+  const { role, setRole, user, signOut } = useRole();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const name = user?.name ?? "Officer";
+  const initials = name
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <aside
       data-no-print="true"
       className="hidden md:flex w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border"
     >
-      <div className="px-5 pt-6 pb-5">
-        <div className="flex items-center gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground font-bold text-sm">
-            HL
-          </div>
-          <div className="leading-tight">
-            <div className="text-[13px] font-semibold tracking-wide">IDBI</div>
-            <div className="text-[11px] text-sidebar-foreground/70">MSME HealthLens</div>
-          </div>
-        </div>
+      <div className="px-4 pt-5 pb-4">
+        <BrandLockup tone="dark" />
       </div>
 
       <nav className="px-2">
@@ -103,10 +110,10 @@ export function Sidebar() {
               className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors hover:bg-sidebar-accent/60"
             >
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs font-semibold">
-                VR
+                {initials}
               </span>
               <span className="min-w-0 flex-1 leading-tight">
-                <span className="block truncate text-[13px] font-medium">Vikram Rao</span>
+                <span className="block truncate text-[13px] font-medium">{name}</span>
                 <span className="block truncate text-[11px] text-sidebar-foreground/60">
                   {role}
                 </span>
@@ -133,7 +140,7 @@ export function Sidebar() {
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={signOut}>
               <LogOut className="mr-2 h-4 w-4" />
               Sign out
             </DropdownMenuItem>

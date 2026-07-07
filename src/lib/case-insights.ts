@@ -35,7 +35,8 @@ export function primaryStrength(c: MsmeCase): string {
   const positive = c.reasonCodes.find((r) => r.polarity === "positive");
   if (positive) return positive.label;
   if (c.peerClusterPercentile >= 70) return "Above local peer behaviour benchmark";
-  if (leadQuality(c).label === "Inclusion lead") return "Thin-file applicant kept in the review path";
+  if (leadQuality(c).label === "Inclusion lead")
+    return "Thin-file applicant kept in the review path";
   return "Consented sources support a scoreable MSME profile";
 }
 
@@ -146,11 +147,13 @@ export function policyGates(c: MsmeCase): PolicyGate[] {
 
 export function triangulationVerdicts(c: MsmeCase): TriangulationVerdict[] {
   const flag = (code: string) => c.fraudFlags.find((f) => f.code === code);
-  const warn = (code: string) => c.fraudFlags.find((f) => f.code === code || f.label.includes(code));
+  const warn = (code: string) =>
+    c.fraudFlags.find((f) => f.code === code || f.label.includes(code));
   const gstBank = flag("GST_BANK_MISMATCH");
   const power = flag("POWER_TURNOVER_MISMATCH");
   const upi = c.fraudFlags.find((f) => f.code === "UPI_REFUND_SPIKE");
   const payroll = c.fraudFlags.find((f) => f.code === "PAYROLL_DIVERGENCE");
+  const purchase = c.fraudFlags.find((f) => f.code === "PURCHASE_SALE_MISMATCH");
   return [
     {
       label: "GST vs bank",
@@ -163,6 +166,11 @@ export function triangulationVerdicts(c: MsmeCase): TriangulationVerdict[] {
       detail: power?.label ?? "Utility activity supports declared operations",
     },
     {
+      label: "Purchase vs sale",
+      status: purchase ? "Review" : "Pass",
+      detail: purchase?.label ?? "Inward purchases are consistent with declared sales",
+    },
+    {
       label: "UPI refund quality",
       status: upi ? "Review" : "Pass",
       detail: upi?.label ?? "Refund ratio within review tolerance",
@@ -173,4 +181,29 @@ export function triangulationVerdicts(c: MsmeCase): TriangulationVerdict[] {
       detail: payroll?.label ?? "No payroll divergence flag",
     },
   ];
+}
+
+export type SlaState = "On track" | "Due soon" | "Breached";
+export interface CaseAgeing {
+  receivedAt: string;
+  hoursAgo: number;
+  sla: SlaState;
+}
+
+// Deterministic per-case ageing so the queue shows realistic turnaround pressure
+// (the "near real-time" ask implies an SLA). Target: first decision within 24h.
+export function caseAgeing(id: string): CaseAgeing {
+  const h = [...id].reduce((s, c) => (s * 31 + c.charCodeAt(0)) >>> 0, 7);
+  const hoursAgo = h % 96; // 0–95h
+  const sla: SlaState = hoursAgo <= 24 ? "On track" : hoursAgo <= 48 ? "Due soon" : "Breached";
+  const receivedAt = new Date(Date.now() - hoursAgo * 3_600_000).toISOString();
+  return { receivedAt, hoursAgo, sla };
+}
+
+export function ageingLabel(hoursAgo: number): string {
+  if (hoursAgo < 1) return "just now";
+  if (hoursAgo < 24) return `${hoursAgo}h ago`;
+  const d = Math.floor(hoursAgo / 24);
+  const h = hoursAgo % 24;
+  return h ? `${d}d ${h}h ago` : `${d}d ago`;
 }

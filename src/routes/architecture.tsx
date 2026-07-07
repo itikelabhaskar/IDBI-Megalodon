@@ -44,7 +44,8 @@ const engineSteps = [
   },
   {
     title: "Engineer signals",
-    detail: "GST-bank, UPI, EPFO, power/utility, cluster and compliance signals are scored with missing-data rules.",
+    detail:
+      "GST-bank, UPI, EPFO, power/utility, cluster and compliance signals are scored with missing-data rules.",
   },
   {
     title: "Score + BRE",
@@ -82,7 +83,9 @@ function ArchitecturePage() {
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
             Pilot readiness
           </div>
-          <h1 className="mt-1 text-xl font-semibold text-foreground">Architecture &amp; data flow</h1>
+          <h1 className="mt-1 text-xl font-semibold text-foreground">
+            Architecture &amp; data flow
+          </h1>
           <p className="mt-0.5 max-w-3xl text-sm text-muted-foreground">
             How HealthLens swaps prototype connectors for IDBI sandbox APIs while keeping the same
             scorecard, explainability, CAM and governance workflow.
@@ -136,7 +139,10 @@ function ArchitecturePage() {
           <Stage title="HealthLens engine" icon={<Server className="h-4 w-4" />} tone="primary">
             <div className="space-y-2">
               {engineSteps.map((step, index) => (
-                <div key={step.title} className="flex gap-3 rounded-md border border-border bg-background p-3">
+                <div
+                  key={step.title}
+                  className="flex gap-3 rounded-md border border-border bg-background p-3"
+                >
                   <div className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary">
                     {index + 1}
                   </div>
@@ -225,7 +231,10 @@ function ArchitecturePage() {
           </p>
         </div>
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-          <Proof label="Power + operations" detail="DISCOM utility signal, operations score, triangulation" />
+          <Proof
+            label="Power + operations"
+            detail="DISCOM utility signal, operations score, triangulation"
+          />
           <Proof label="NTC/NTB support" detail="No automatic rejection for thin-file cases" />
           <Proof label="Go / No-Go" detail="Decision mapped to banker language" />
           <Proof label="Auditability" detail="Consent, override, CAM and model-card trail" />

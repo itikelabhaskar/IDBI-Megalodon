@@ -68,13 +68,15 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
 
       <div className="space-y-4">
         <div className="flex flex-wrap gap-1 rounded-md bg-muted p-1">
-          {([
-            ["overview", "Overview"],
-            ["model", "Model"],
-            ["fairness", "Fairness"],
-            ["consent", "Consent"],
-            ["overrides", "Overrides"],
-          ] as const).map(([value, label]) => (
+          {(
+            [
+              ["overview", "Overview"],
+              ["model", "Model"],
+              ["fairness", "Fairness"],
+              ["consent", "Consent"],
+              ["overrides", "Overrides"],
+            ] as const
+          ).map(([value, label]) => (
             <button
               key={value}
               type="button"
@@ -93,28 +95,38 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
 
         {tab === "overview" && (
           <div className="space-y-4">
-          <div className="rounded-md border border-band-a/30 bg-band-a/5 p-4">
-            <div className="text-xs uppercase tracking-widest text-band-a font-semibold">
-              Champion vs challenger — inclusion without diluting asset quality
+            <div className="rounded-md border border-band-a/30 bg-band-a/5 p-4">
+              <div className="text-xs uppercase tracking-widest text-band-a font-semibold">
+                Champion vs challenger — inclusion without diluting asset quality
+              </div>
+              <p className="mt-1 text-sm text-foreground/90">
+                A traditional document/bureau baseline rejects{" "}
+                <span className="font-semibold">{cc.rescued}</span> viable thin-file MSMEs (
+                <span className="font-semibold">{cc.rescuedPct}%</span> of the thin-file pool) that
+                HealthLens routes back into the funnel — while the simulated bad-rate among
+                HealthLens approvals stays at{" "}
+                <span className="font-semibold">{cc.healthLensApprovedBadRate}%</span>.
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <Metric
+                  label="HealthLens approvals"
+                  value={String(cc.healthLensApprovals)}
+                  sub={`simulated bad-rate ${cc.healthLensApprovedBadRate}%`}
+                />
+                <Metric
+                  label="Traditional approvals"
+                  value={String(cc.traditionalApprovals)}
+                  sub={`simulated bad-rate ${cc.traditionalApprovedBadRate}%`}
+                />
+              </div>
+              <p className="mt-2 text-[11px] text-muted-foreground italic">
+                Indicative figures on synthetic data; bad-rate uses hidden outcome labels. Final
+                calibration requires sandbox-data backtesting.
+              </p>
             </div>
-            <p className="mt-1 text-sm text-foreground/90">
-              A traditional document/bureau baseline rejects{" "}
-              <span className="font-semibold">{cc.rescued}</span> viable thin-file MSMEs (
-              <span className="font-semibold">{cc.rescuedPct}%</span> of the thin-file pool) that
-              HealthLens routes back into the funnel — while the simulated bad-rate among HealthLens
-              approvals stays at <span className="font-semibold">{cc.healthLensApprovedBadRate}%</span>.
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <Metric label="HealthLens approvals" value={String(cc.healthLensApprovals)} sub={`simulated bad-rate ${cc.healthLensApprovedBadRate}%`} />
-              <Metric label="Traditional approvals" value={String(cc.traditionalApprovals)} sub={`simulated bad-rate ${cc.traditionalApprovedBadRate}%`} />
-            </div>
-            <p className="mt-2 text-[11px] text-muted-foreground italic">
-              Indicative figures on synthetic data; bad-rate uses hidden outcome labels. Final calibration requires sandbox-data backtesting.
-            </p>
-          </div>
-          <Panel title="Risk-band distribution">
-            <RiskDistributionChart data={distribution} />
-          </Panel>
+            <Panel title="Risk-band distribution">
+              <RiskDistributionChart data={distribution} />
+            </Panel>
           </div>
         )}
 
@@ -125,7 +137,10 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
               <Dt label="Inputs" value="GST · AA bank · UPI · EPFO · Power · Bureau-lite" />
               <Dt label="Label" value="Synthetic default (leakage-free)" />
               <Dt label="AUC (held-out)" value={MODEL.metrics.auc.toFixed(3)} />
-              <Dt label="KS / Gini" value={`${MODEL.metrics.ks.toFixed(2)} / ${MODEL.metrics.gini.toFixed(2)}`} />
+              <Dt
+                label="KS / Gini"
+                value={`${MODEL.metrics.ks.toFixed(2)} / ${MODEL.metrics.gini.toFixed(2)}`}
+              />
               <Dt label="Train / test" value={`${MODEL.metrics.trainN} / ${MODEL.metrics.testN}`} />
               <Dt label="Decision tier" value="Advisory — IDBI officer accepts/overrides" />
               <Dt label="Pilot note" value="Refit/calibrate on IDBI sandbox data before use" />
@@ -135,26 +150,31 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
 
         {tab === "fairness" && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Panel title="Segment fairness — approval rate">
-            <ul className="space-y-1.5 text-sm">
-              {fairness.map((s) => (
-                <li key={s.segment} className="flex items-center justify-between gap-3">
-                  <span className="text-foreground/90">{s.segment}<span className="text-muted-foreground"> · n={s.n}</span></span>
-                  <span className="font-semibold tabular-nums">{s.approvalRate}%</span>
-                </li>
-              ))}
-            </ul>
-          </Panel>
-          <Panel title="Top reject / refer reasons">
-            <ul className="space-y-1.5 text-sm">
-              {rejectReasons.map((r) => (
-                <li key={r.code} className="flex items-start justify-between gap-3">
-                  <span className="text-foreground/90">{r.label}</span>
-                  <span className="font-semibold tabular-nums text-muted-foreground">{r.count}</span>
-                </li>
-              ))}
-            </ul>
-          </Panel>
+            <Panel title="Segment fairness — approval rate">
+              <ul className="space-y-1.5 text-sm">
+                {fairness.map((s) => (
+                  <li key={s.segment} className="flex items-center justify-between gap-3">
+                    <span className="text-foreground/90">
+                      {s.segment}
+                      <span className="text-muted-foreground"> · n={s.n}</span>
+                    </span>
+                    <span className="font-semibold tabular-nums">{s.approvalRate}%</span>
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+            <Panel title="Top reject / refer reasons">
+              <ul className="space-y-1.5 text-sm">
+                {rejectReasons.map((r) => (
+                  <li key={r.code} className="flex items-start justify-between gap-3">
+                    <span className="text-foreground/90">{r.label}</span>
+                    <span className="font-semibold tabular-nums text-muted-foreground">
+                      {r.count}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Panel>
           </div>
         )}
 
@@ -162,12 +182,19 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
           <Panel title="Consent log (last 10)">
             <ul className="space-y-1.5 text-xs">
               {consentLogs.slice(0, 10).map((c, i) => (
-                <li key={i} className="flex items-start justify-between gap-3 border-b border-border pb-1.5">
+                <li
+                  key={i}
+                  className="flex items-start justify-between gap-3 border-b border-border pb-1.5"
+                >
                   <div>
                     <div className="font-medium text-foreground">{c.action}</div>
-                    <div className="text-muted-foreground">Case {c.caseId} {c.detail ? `· ${c.detail}` : ""}</div>
+                    <div className="text-muted-foreground">
+                      Case {c.caseId} {c.detail ? `· ${c.detail}` : ""}
+                    </div>
                   </div>
-                  <div className="text-muted-foreground tabular-nums whitespace-nowrap">{formatDateTime(c.ts)}</div>
+                  <div className="text-muted-foreground tabular-nums whitespace-nowrap">
+                    {formatDateTime(c.ts)}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -176,7 +203,11 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
 
         {tab === "overrides" && (
           <Panel title="Override history">
-            {overrides.length === 0 ? <p className="text-sm text-muted-foreground">No officer overrides recorded yet.</p> : <AuditTimeline events={overrides} />}
+            {overrides.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No officer overrides recorded yet.</p>
+            ) : (
+              <AuditTimeline events={overrides} />
+            )}
           </Panel>
         )}
       </div>
@@ -184,17 +215,35 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
   );
 }
 
-function RiskDistributionChart({ data }: { data: { band: string; count: number; color: string }[] }) {
+function RiskDistributionChart({
+  data,
+}: {
+  data: { band: string; count: number; color: string }[];
+}) {
   return (
     <div className="h-56">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
           <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="band" stroke="var(--color-muted-foreground)" fontSize={11} />
-          <YAxis allowDecimals={false} stroke="var(--color-muted-foreground)" fontSize={11} width={32} />
-          <Tooltip contentStyle={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 6, fontSize: 12 }} />
+          <YAxis
+            allowDecimals={false}
+            stroke="var(--color-muted-foreground)"
+            fontSize={11}
+            width={32}
+          />
+          <Tooltip
+            contentStyle={{
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              borderRadius: 6,
+              fontSize: 12,
+            }}
+          />
           <Bar dataKey="count" radius={[3, 3, 0, 0]}>
-            {data.map((d) => <Cell key={d.band} fill={d.color} />)}
+            {data.map((d) => (
+              <Cell key={d.band} fill={d.color} />
+            ))}
           </Bar>
         </BarChart>
       </ResponsiveContainer>

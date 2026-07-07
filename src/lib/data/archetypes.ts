@@ -27,6 +27,7 @@ export interface ArchetypeConfig {
   gstDelayRate: number; // base prob of a delayed filing
   zeroReturnRate: number;
   buyerConcentration: number; // base top-3 buyer share
+  purchaseRatio: number; // inward/purchases as a fraction of declared sales
 
   bankRatio: number; // bank SALE credit / GST outward (low ⇒ mismatch)
   outflowRatio: number; // monthly debit / credit
@@ -69,6 +70,7 @@ const BASE: Omit<ArchetypeConfig, "id" | "label" | "weight"> = {
   gstDelayRate: 0.08,
   zeroReturnRate: 0.03,
   buyerConcentration: 0.35,
+  purchaseRatio: 0.7,
   bankRatio: 0.95,
   outflowRatio: 0.86,
   bounceBase: 1,
@@ -107,6 +109,7 @@ export const ARCHETYPES: ArchetypeConfig[] = [
     gstVol: 0.1,
     gstDelayRate: 0.04,
     buyerConcentration: 0.28,
+    purchaseRatio: 0.78,
     bankRatio: 0.97,
     bounceBase: 0.5,
     epfoEmployees: 14,
@@ -155,6 +158,7 @@ export const ARCHETYPES: ArchetypeConfig[] = [
     gstBase: 1_600_000,
     gstGrowth: 0.02,
     bankRatio: 0.96,
+    purchaseRatio: 0.45,
     bounceBase: 0.6,
     upiPresentP: 1,
     upiBase: 600_000,
@@ -188,6 +192,7 @@ export const ARCHETYPES: ArchetypeConfig[] = [
     gstBase: 3_000_000,
     gstVol: 0.3,
     buyerConcentration: 0.8,
+    purchaseRatio: 0.2,
     bankRatio: 0.3, // headline mismatch: GST high, bank credits weak
     bounceBase: 4,
     upiPresentP: 0.4,
@@ -205,6 +210,7 @@ export const ARCHETYPES: ArchetypeConfig[] = [
     gstVol: 0.1,
     gstDelayRate: 0.05,
     bankRatio: 0.98,
+    purchaseRatio: 0.22,
     bounceBase: 0.4,
     upiBase: 90_000,
     epfoEmployees: 6,

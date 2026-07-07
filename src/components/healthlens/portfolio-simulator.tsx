@@ -238,20 +238,34 @@ function evaluate(cases: MsmeCase[], policy: Policy) {
 }
 
 function applyPolicy(c: MsmeCase, p: Policy): "Approve" | "Refer" | "Reject" {
-  // Hard rejects: high-severity fraud flags remain rejects.
-  if (c.fraudFlags.some((f) => f.severity === "high")) return "Reject";
-  // Map proxy signals from reason codes to policy levers (synthetic):
-  const bounces = c.reasonCodes
-    .find((r) => r.code.startsWith("BANK_BOUNCES"))
-    ?.code.match(/\d+/)?.[0];
-  if (bounces && Number(bounces) > p.maxBounces) return "Reject";
-  const lateFiling = c.reasonCodes
-    .find((r) => r.code.startsWith("GST_LATE"))
-    ?.code.match(/\d+/)?.[0];
-  if (lateFiling && Number(lateFiling) > p.gstDelayTolerance) return "Refer";
-  if (c.reasonCodes.some((r) => r.code === "BANK_VOL_HIGH") && p.volatilityTolerance < 40)
-    return "Refer";
-  if (c.reasonCodes.some((r) => r.code === "GST_BANK_MISMATCH") && p.gstBankMismatch < 30)
-    return "Reject";
-  return c.decision;
+  // Start from the engine decision; tightening a threshold can only downgrade a
+  // case (Approve → Refer → Reject), never upgrade one the engine already flagged.
+  const rank = { Approve: 0, Refer: 1, Reject: 2 } as const;
+  let decision: "Approve" | "Refer" | "Reject" = c.decision;
+  const downgrade = (to: "Refer" | "Reject") => {
+    if (rank[to] > rank[decision]) decision = to;
+  };
+
+  // High-severity fraud always rejects.
+  if (c.fraudFlags.some((f) => f.severity === "high")) downgrade("Reject");
+
+  const has = (code: string) => c.reasonCodes.some((r) => r.code === code);
+
+  // Bounce policy — an excessive-bounce case (>6 in 12m) is rejected unless the
+  // officer sets a very tolerant cap; any bounce history is referred when strict.
+  if (has("BOUNCE_EXCESSIVE") && p.maxBounces < 6) downgrade("Reject");
+  else if (!has("LOW_BOUNCE_HISTORY") && p.maxBounces <= 1) downgrade("Refer");
+
+  // GST late-filing tolerance — high-delay filers are referred when strict.
+  if (has("GST_DELAY_HIGH") && p.gstDelayTolerance < 2) downgrade("Refer");
+
+  // Cash-flow volatility cap — volatile inflows are referred when the CV cap tightens.
+  if (has("CASHFLOW_VOLATILE") && p.volatilityTolerance < 40) downgrade("Refer");
+
+  // GST↔bank mismatch cap — the fraud flag carries the mismatch % in its label.
+  const mismatch = c.fraudFlags.find((f) => f.code === "GST_BANK_MISMATCH");
+  const mismatchPct = mismatch ? Number(mismatch.label.match(/(\d+)%/)?.[1] ?? 0) : 0;
+  if (mismatchPct >= p.gstBankMismatch) downgrade("Reject");
+
+  return decision;
 }

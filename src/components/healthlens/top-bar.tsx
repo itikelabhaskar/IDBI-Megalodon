@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BrandMark } from "./brand";
+import { NotificationsBell } from "./notifications-bell";
 import { UserCog, FlaskConical, UserRound, Settings, LogOut } from "lucide-react";
 
 export function TopBar() {
@@ -21,10 +23,8 @@ export function TopBar() {
       className="h-14 shrink-0 border-b border-border bg-surface flex items-center px-4 md:px-6 gap-3"
     >
       <div className="flex items-center gap-2 md:hidden">
-        <div className="grid h-7 w-7 place-items-center rounded-md bg-primary text-primary-foreground text-xs font-bold">
-          HL
-        </div>
-        <span className="text-sm font-semibold text-foreground">HealthLens</span>
+        <BrandMark className="h-7 w-7" />
+        <span className="text-sm font-semibold text-foreground">IDBI HealthLens</span>
       </div>
       <div className="hidden md:flex items-center gap-2 min-w-0">
         <span className="text-sm font-semibold text-foreground">IDBI MSME HealthLens</span>
@@ -39,6 +39,8 @@ export function TopBar() {
           <FlaskConical className="h-3 w-3 mr-1 text-accent" />
           Prototype — synthetic data
         </Badge>
+
+        <NotificationsBell />
 
         {/* Account menu — mobile only; desktop uses the sidebar user block. */}
         <div className="md:hidden">

@@ -9,6 +9,7 @@ export interface GstnReturn {
   period: string;
   return_type: "GSTR3B";
   total_outward: number;
+  total_inward: number;
   total_tax: number;
   filing_date: string;
   delayed: boolean;
@@ -30,6 +31,7 @@ export function fetchGstn(raw: RawMsme): GstnPayload | null {
       period: g.period,
       return_type: "GSTR3B",
       total_outward: g.totalOutward,
+      total_inward: g.totalInward,
       total_tax: g.totalTax,
       filing_date: g.filingDate,
       delayed: g.delayedFlag,

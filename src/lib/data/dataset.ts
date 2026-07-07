@@ -11,9 +11,9 @@ import { simulateScore, type SimResult } from "../scoring/simulate";
 import type { MsmeCase } from "../types";
 
 // Population served to the UI. The generator supports 500–1000 (see the
-// data-quality tests); the deployed queue uses a lighter, snappy subset that
-// still exhibits the full decision spread and rich portfolio/governance stats.
-export const DATASET_SIZE = 240;
+// data-quality tests) and the deployed queue uses the full spec range so the
+// portfolio-quality and diversification story holds up under scrutiny.
+export const DATASET_SIZE = 600;
 
 let rawsCache: RawMsme[] | null = null;
 let casesCache: MsmeCase[] | null = null;

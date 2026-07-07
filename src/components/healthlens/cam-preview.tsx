@@ -87,7 +87,10 @@ export function CamPreview({ data }: { data: MsmeCase }) {
               ["Primary strength", primaryStrength(data)],
               ["Primary concern", primaryConcern(data)],
               ["Missing evidence", missingEvidence(data)],
-              ["Officer action", data.decision === "Approve" ? "Accept / export CAM" : "Review before sanction"],
+              [
+                "Officer action",
+                data.decision === "Approve" ? "Accept / export CAM" : "Review before sanction",
+              ],
             ]}
           />
         </Section>
@@ -128,7 +131,10 @@ export function CamPreview({ data }: { data: MsmeCase }) {
         <Section title="6. Policy gates">
           <ul className="grid grid-cols-1 gap-1 text-sm md:grid-cols-2">
             {policyGates(data).map((gate) => (
-              <li key={gate.label} className="flex items-start justify-between gap-3 border-b border-dashed border-border py-1">
+              <li
+                key={gate.label}
+                className="flex items-start justify-between gap-3 border-b border-dashed border-border py-1"
+              >
                 <span>{gate.label}</span>
                 <span className="text-right text-muted-foreground">
                   {gate.status} · {gate.detail}
@@ -184,11 +190,10 @@ export function CamPreview({ data }: { data: MsmeCase }) {
 
         <footer className="mt-8 border-t border-border pt-3 text-[10px] text-muted-foreground leading-relaxed">
           Prepared by HealthLens for officer review; acceptance, rejection, or override remains with
-          IDBI's authorised credit officer. 
-          HealthLens is a decision-support and configurable recommendation engine. IDBI remains the
-          regulated entity and final decision owner. All figures derive from consented alternate
-          data sources for the stated 12-month window. Synthetic prototype data — not for live
-          decisioning.
+          IDBI's authorised credit officer. HealthLens is a decision-support and configurable
+          recommendation engine. IDBI remains the regulated entity and final decision owner. All
+          figures derive from consented alternate data sources for the stated 12-month window.
+          Synthetic prototype data — not for live decisioning.
         </footer>
       </article>
     </div>

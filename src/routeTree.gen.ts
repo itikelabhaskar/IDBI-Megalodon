@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ScoreRouteImport } from './routes/score'
 import { Route as QueueRouteImport } from './routes/queue'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as GovernanceRouteImport } from './routes/governance'
@@ -22,6 +23,11 @@ import { Route as CasesIdDecisionRouteImport } from './routes/cases.$id.decision
 import { Route as CasesIdConsentRouteImport } from './routes/cases.$id.consent'
 import { Route as CasesIdCamRouteImport } from './routes/cases.$id.cam'
 
+const ScoreRoute = ScoreRouteImport.update({
+  id: '/score',
+  path: '/score',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QueueRoute = QueueRouteImport.update({
   id: '/queue',
   path: '/queue',
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/governance': typeof GovernanceRoute
   '/portfolio': typeof PortfolioRoute
   '/queue': typeof QueueRoute
+  '/score': typeof ScoreRoute
   '/cases/$id': typeof CasesIdRouteWithChildren
   '/cases/$id/cam': typeof CasesIdCamRoute
   '/cases/$id/consent': typeof CasesIdConsentRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/governance': typeof GovernanceRoute
   '/portfolio': typeof PortfolioRoute
   '/queue': typeof QueueRoute
+  '/score': typeof ScoreRoute
   '/cases/$id/cam': typeof CasesIdCamRoute
   '/cases/$id/consent': typeof CasesIdConsentRoute
   '/cases/$id/decision': typeof CasesIdDecisionRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/governance': typeof GovernanceRoute
   '/portfolio': typeof PortfolioRoute
   '/queue': typeof QueueRoute
+  '/score': typeof ScoreRoute
   '/cases/$id': typeof CasesIdRouteWithChildren
   '/cases/$id/cam': typeof CasesIdCamRoute
   '/cases/$id/consent': typeof CasesIdConsentRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/governance'
     | '/portfolio'
     | '/queue'
+    | '/score'
     | '/cases/$id'
     | '/cases/$id/cam'
     | '/cases/$id/consent'
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/governance'
     | '/portfolio'
     | '/queue'
+    | '/score'
     | '/cases/$id/cam'
     | '/cases/$id/consent'
     | '/cases/$id/decision'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/governance'
     | '/portfolio'
     | '/queue'
+    | '/score'
     | '/cases/$id'
     | '/cases/$id/cam'
     | '/cases/$id/consent'
@@ -175,11 +187,19 @@ export interface RootRouteChildren {
   GovernanceRoute: typeof GovernanceRoute
   PortfolioRoute: typeof PortfolioRoute
   QueueRoute: typeof QueueRoute
+  ScoreRoute: typeof ScoreRoute
   CasesIdRoute: typeof CasesIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/score': {
+      id: '/score'
+      path: '/score'
+      fullPath: '/score'
+      preLoaderRoute: typeof ScoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/queue': {
       id: '/queue'
       path: '/queue'
@@ -294,6 +314,7 @@ const rootRouteChildren: RootRouteChildren = {
   GovernanceRoute: GovernanceRoute,
   PortfolioRoute: PortfolioRoute,
   QueueRoute: QueueRoute,
+  ScoreRoute: ScoreRoute,
   CasesIdRoute: CasesIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport

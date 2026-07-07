@@ -1,8 +1,24 @@
 import type { ReactNode } from "react";
 import { Sidebar } from "./sidebar";
 import { TopBar } from "./top-bar";
+import { LoginScreen } from "./login-screen";
+import { BrandMark } from "./brand";
+import { useRole } from "@/lib/role-context";
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const { user, hydrated } = useRole();
+
+  // Neutral splash during hydration so SSR and first client render match.
+  if (!hydrated) {
+    return (
+      <div className="grid min-h-screen w-full place-items-center bg-background">
+        <BrandMark className="h-12 w-12 animate-pulse" />
+      </div>
+    );
+  }
+
+  if (!user) return <LoginScreen />;
+
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
       <Sidebar />

@@ -41,7 +41,9 @@ function ExplainPage() {
       </section>
 
       <section className="rounded-md border border-border bg-surface p-4">
-        <div className="mb-3 text-xs font-semibold text-foreground/80">Policy / eligibility gates</div>
+        <div className="mb-3 text-xs font-semibold text-foreground/80">
+          Policy / eligibility gates
+        </div>
         <PolicyGateGrid gates={policyGates(data)} />
       </section>
 

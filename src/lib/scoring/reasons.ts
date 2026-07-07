@@ -34,6 +34,11 @@ export function reasonCodes(f: FeatureVector): ReasonCode[] {
         ? "Fuel / operational spend is consistent with declared turnover"
         : "Fuel spend confirms active logistics operations for this thin-file applicant",
     );
+  if (f.hasPurchaseData && f.purchaseToSaleRatio >= 0.4 && f.purchaseToSaleRatio <= 1.0)
+    pos(
+      "PURCHASE_CONSISTENT",
+      "Purchase (inward) filings are consistent with declared sales — real trading confirmed",
+    );
 
   // Negative
   if (!f.hasGst)
@@ -71,6 +76,11 @@ export function reasonCodes(f: FeatureVector): ReasonCode[] {
     );
   if (f.hasCircular)
     neg("CIRCULAR_FLOW_SUSPECT", "Repeated round-amount / circular transfers detected");
+  if (f.hasPurchaseData && f.purchaseToSaleRatio > 1.1)
+    neg(
+      "PURCHASE_SALE_MISMATCH",
+      "Purchases (inward) exceed declared sales — sales may be under-reported",
+    );
 
   return out;
 }
@@ -112,6 +122,12 @@ export function fraudFlags(f: FeatureVector): FraudFlag[] {
       code: "FUEL_TURNOVER_MISMATCH",
       severity: "info",
       label: `Fuel-implied activity ${Math.round(f.fuelTurnoverGap * 100)}% below declared turnover`,
+    });
+  if (f.hasPurchaseData && f.purchaseToSaleRatio > 1.1)
+    out.push({
+      code: "PURCHASE_SALE_MISMATCH",
+      severity: "warn",
+      label: `Purchases at ${Math.round(f.purchaseToSaleRatio * 100)}% of declared sales — possible under-reporting`,
     });
   return out;
 }

@@ -40,7 +40,9 @@ function ConsentPage() {
           {data.dataCompleteness.map((source) => (
             <div key={source.source} className="rounded-md border border-border bg-background p-3">
               <div className="flex items-center justify-between gap-2">
-                <div className="text-sm font-medium text-foreground">{sourceLabel[source.source]}</div>
+                <div className="text-sm font-medium text-foreground">
+                  {sourceLabel[source.source]}
+                </div>
                 <span
                   className={
                     source.available

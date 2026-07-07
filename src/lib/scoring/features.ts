@@ -6,15 +6,14 @@
 
 import type { RawMsme } from "../data/raw-types";
 import { detectReversedPairs } from "./fraud-analytics";
+import { rupeesPerKwh, rupeesTurnoverPerFuel } from "../data/sector-intensity";
 
-// Average ₹ of turnover represented by 1 kWh of electricity consumed. Used to
-// translate power usage into an implied turnover (thin-file inference) and to
-// triangulate declared GST turnover against real operational activity.
+// Legacy population-blended averages, kept only as a display fallback. The scoring
+// engine now uses the SECTOR-specific inverse intensity (see data/sector-intensity)
+// so power/fuel-vs-turnover triangulation is accurate per industry.
 export const RUPEES_PER_KWH = 2600;
 
-// Average ₹ of turnover represented by ₹1 of fuel spend (inverse of a blended
-// fuel-intensity across logistics/trading sectors). Used to translate fuel spend
-// into implied operating activity for thin-file traders.
+// Legacy population-blended average, kept only as a display fallback.
 export const RUPEES_TURNOVER_PER_FUEL = 66;
 
 export interface FeatureVector {
@@ -29,6 +28,11 @@ export interface FeatureVector {
   gstOnTimeRatio: number;
   gstZeroReturnRatio: number;
   gstConcentration: number;
+
+  // Purchases / inward (ITC) — corroborates real trading activity and flags
+  // sales under-reporting when purchases run ahead of declared sales.
+  hasPurchaseData: boolean;
+  purchaseToSaleRatio: number; // avg inward / avg outward
 
   // Bank cash-flow (genuine SALE credits)
   bankMonthlyCreditAvg: number;
@@ -136,6 +140,14 @@ export function computeFeatures(raw: RawMsme): FeatureVector {
     : 0;
   const gstConcentration = hasGst ? mean(raw.gst!.map((g) => g.top3BuyerShare)) : 0;
 
+  // Purchases / inward (ITC): confirms real trading even for thin files, and a
+  // ratio above ~1 means purchases exceed declared sales — possible under-reporting.
+  const gstInward = hasGst ? raw.gst!.map((g) => g.totalInward) : [];
+  const gstPurchaseAvg = mean(gstInward);
+  const hasPurchaseData = hasGst && gstInward.some((x) => x > 0);
+  const purchaseToSaleRatio =
+    gstMonthlyTurnoverAvg > 0 ? gstPurchaseAvg / gstMonthlyTurnoverAvg : 0;
+
   const gstTotal = gstOutward.reduce((s, x) => s + x, 0);
   const saleTotal = monthlySale.reduce((s, x) => s + x, 0);
   const gstBankTurnoverGap = hasGst && gstTotal > 0 ? (gstTotal - saleTotal) / gstTotal : 0;
@@ -183,7 +195,7 @@ export function computeFeatures(raw: RawMsme): FeatureVector {
     const pf3 = mean(units.slice(0, 3));
     const pl3 = mean(units.slice(-3));
     powerTrend = pf3 > 0 ? (pl3 - pf3) / pf3 : 0;
-    powerImpliedTurnover = powerConsumptionAvg * RUPEES_PER_KWH;
+    powerImpliedTurnover = powerConsumptionAvg * rupeesPerKwh(raw.profile.sector);
     turnoverPowerGap =
       hasGst && gstMonthlyTurnoverAvg > 0
         ? (gstMonthlyTurnoverAvg - powerImpliedTurnover) / gstMonthlyTurnoverAvg
@@ -202,7 +214,7 @@ export function computeFeatures(raw: RawMsme): FeatureVector {
     const ff3 = mean(spend.slice(0, 3));
     const fl3 = mean(spend.slice(-3));
     fuelTrend = ff3 > 0 ? (fl3 - ff3) / ff3 : 0;
-    fuelImpliedActivity = fuelSpendAvg * RUPEES_TURNOVER_PER_FUEL;
+    fuelImpliedActivity = fuelSpendAvg * rupeesTurnoverPerFuel(raw.profile.sector);
     fuelTurnoverGap =
       hasGst && gstMonthlyTurnoverAvg > 0
         ? (gstMonthlyTurnoverAvg - fuelImpliedActivity) / gstMonthlyTurnoverAvg
@@ -219,6 +231,8 @@ export function computeFeatures(raw: RawMsme): FeatureVector {
     gstOnTimeRatio,
     gstZeroReturnRatio,
     gstConcentration,
+    hasPurchaseData,
+    purchaseToSaleRatio,
     bankMonthlyCreditAvg,
     bankCreditVolatility,
     emiBounceCount,
