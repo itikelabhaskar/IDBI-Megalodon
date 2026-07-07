@@ -13,6 +13,14 @@ import { nitro } from "nitro/vite";
 // `node-server`, `aws-lambda`) for other hosts.
 export default defineConfig({
   server: { port: 8080 },
+  // Force tslib to its ESM build. With `noExternals` (deps bundled into the
+  // serverless function), the bundler otherwise inlines tslib's UMD/CJS build,
+  // whose helpers (`__extends`, …) come back undefined at runtime and crash SSR.
+  resolve: {
+    alias: {
+      tslib: "tslib/tslib.es6.mjs",
+    },
+  },
   plugins: [
     tsConfigPaths(),
     tailwindcss(),
