@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import type { TrendPoint, CashflowPoint, UpiPoint, BuyerShare } from "@/lib/types";
 import { formatPeriod, formatInrCompact } from "@/lib/format";
-import { RUPEES_PER_KWH } from "@/lib/scoring/features";
+import { rupeesPerKwh } from "@/lib/data/sector-intensity";
 
 const tooltipStyle = {
   background: "var(--color-surface)",
@@ -419,14 +419,18 @@ export function FuelChart({ data }: { data: TrendPoint[] }) {
 export function PowerTriangulationChart({
   power,
   gst,
+  sector,
 }: {
   power: TrendPoint[];
   gst: TrendPoint[];
+  /** Sector drives ₹/kWh so the chart matches the scoring engine. */
+  sector: string;
 }) {
   if (!power?.length) return <EmptyChart label="Power source not consented" h={288} />;
+  const rate = rupeesPerKwh(sector);
   const gstMap = new Map(gst.map((g) => [g.period, g.value]));
   const data = power.map((p) => {
-    const implied = Math.round(p.value * RUPEES_PER_KWH);
+    const implied = Math.round(p.value * rate);
     const declared = gstMap.get(p.period) ?? 0;
     const pct = declared === 0 ? 0 : (declared - implied) / declared;
     return { period: p.period, implied, declared, diffPct: +(pct * 100).toFixed(1) };

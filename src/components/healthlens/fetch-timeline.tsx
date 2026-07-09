@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 type Status = "idle" | "loading" | "done" | "skipped";
 
-const SOURCES: DataSource[] = ["GST", "AA_BANK", "UPI", "EPFO", "POWER", "BUREAU"];
+const SOURCES: DataSource[] = ["GST", "AA_BANK", "UPI", "EPFO", "POWER", "FUEL", "BUREAU"];
 
 export function FetchTimeline({ data }: { data: MsmeCase }) {
   const presence = new Map(data.dataCompleteness.map((d) => [d.source, d.available]));
@@ -16,6 +16,7 @@ export function FetchTimeline({ data }: { data: MsmeCase }) {
     UPI: "idle",
     EPFO: "idle",
     POWER: "idle",
+    FUEL: "idle",
     BUREAU: "idle",
   });
   const [elapsed, setElapsed] = useState(0);
@@ -28,6 +29,7 @@ export function FetchTimeline({ data }: { data: MsmeCase }) {
       UPI: "idle",
       EPFO: "idle",
       POWER: "idle",
+      FUEL: "idle",
       BUREAU: "idle",
     });
     setElapsed(0);

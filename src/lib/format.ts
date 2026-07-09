@@ -103,6 +103,7 @@ export const sourceLabel: Record<string, string> = {
   UPI: "UPI",
   EPFO: "EPFO",
   POWER: "Power",
+  FUEL: "Fuel",
   BUREAU: "Bureau",
 };
 

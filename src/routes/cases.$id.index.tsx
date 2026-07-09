@@ -47,7 +47,7 @@ function HealthCardPage() {
               </div>
               {missingCount > 0 && (
                 <p className="mt-4 rounded-md border border-band-c/30 bg-band-c/5 px-3 py-2 text-xs text-band-c">
-                  {missingCount} of 6 data sources unavailable — sub-scores shown as N/A and
+                  {missingCount} of {data.dataCompleteness.length} data sources unavailable — sub-scores shown as N/A and
                   weighted out.
                 </p>
               )}

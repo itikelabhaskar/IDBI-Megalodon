@@ -17,7 +17,7 @@ export type ProductRoute =
   | "CGTMSE"
   | "Digital MSME Onboarding"
   | "Manual Review";
-export type DataSource = "GST" | "AA_BANK" | "UPI" | "EPFO" | "BUREAU" | "POWER";
+export type DataSource = "GST" | "AA_BANK" | "UPI" | "EPFO" | "BUREAU" | "POWER" | "FUEL";
 
 export interface SubScores {
   // 0–100, or null when the source is missing (show as N/A)

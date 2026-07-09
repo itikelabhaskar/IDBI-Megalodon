@@ -14,7 +14,7 @@ import { NotificationsBell } from "./notifications-bell";
 import { UserCog, FlaskConical, UserRound, Settings, LogOut } from "lucide-react";
 
 export function TopBar() {
-  const { role, setRole } = useRole();
+  const { role, setRole, signOut } = useRole();
   const roles: Role[] = ["Credit Officer", "Risk Admin"];
 
   return (
@@ -68,7 +68,7 @@ export function TopBar() {
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={signOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign out
               </DropdownMenuItem>

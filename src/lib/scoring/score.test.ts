@@ -21,6 +21,7 @@ import {
 } from "./decision";
 import { scoreMl } from "./ml";
 import { scoreCase, scoreDataset } from "./score";
+import { fraudFlags, reasonCodes } from "./reasons";
 
 const VALID_GSTIN = "27AAPFU0939F1ZV";
 
@@ -397,6 +398,29 @@ describe("ML viability layer", () => {
   });
 });
 
+describe("fraud flag / hard-flag asymmetry", () => {
+  it("does not treat fuel-vs-turnover mismatch as a hard fraud reject", () => {
+    const f = feat({
+      hasGst: true,
+      hasFuel: true,
+      fuelTurnoverGap: 0.75,
+      gstBankTurnoverGap: 0.1,
+      turnoverPowerGap: 0.1,
+      hasCircular: false,
+    });
+    expect(hardFlags(f).fraudStrong).toBe(false);
+    expect(fraudFlags(f).some((x) => x.code === "FUEL_TURNOVER_MISMATCH")).toBe(true);
+    expect(fraudFlags(f).find((x) => x.code === "FUEL_TURNOVER_MISMATCH")?.severity).toBe("info");
+  });
+
+  it("treats power-vs-turnover mismatch as a hard fraud reject with matching reason", () => {
+    const f = feat({ hasGst: true, hasPower: true, turnoverPowerGap: 0.55 });
+    expect(hardFlags(f).fraudStrong).toBe(true);
+    expect(reasonCodes(f).some((r) => r.code === "POWER_TURNOVER_MISMATCH")).toBe(true);
+    expect(fraudFlags(f).some((x) => x.code === "POWER_TURNOVER_MISMATCH")).toBe(true);
+  });
+});
+
 describe("end-to-end on the synthetic population", () => {
   const raws = generateDataset(400);
   const cases = scoreDataset(raws);
@@ -435,6 +459,19 @@ describe("end-to-end on the synthetic population", () => {
     const fraud = cases.filter((c) => archById.get(c.id) === "FRAUD_SUSPECT");
     expect(fraud.length).toBeGreaterThan(0);
     expect(fraud.every((c) => c.decision === "Reject")).toBe(true);
+  });
+
+  it("flags fuel-vs-turnover mismatch on fraud cases that have a fuel feed", () => {
+    const fraudWithFuel = cases.filter(
+      (c) =>
+        archById.get(c.id) === "FRAUD_SUSPECT" &&
+        c.fuelConsumption.length > 0 &&
+        c.gstTrend.length > 0,
+    );
+    expect(fraudWithFuel.length).toBeGreaterThan(0);
+    expect(
+      fraudWithFuel.every((c) => c.fraudFlags.some((f) => f.code === "FUEL_TURNOVER_MISMATCH")),
+    ).toBe(true);
   });
 
   it("approves the majority of stable traders", () => {

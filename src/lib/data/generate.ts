@@ -384,19 +384,25 @@ function genFuel(
   periods: string[],
   gst: GstMonthly[] | null,
   r: number,
+  anomalyTags: string[],
 ): FuelMonthly[] {
   const intensity = FUEL_INTENSITY[arch.id];
   const noGstBase = arch.upiBase * 1.6;
   const pricePerLitre = 95;
   const n = periods.length;
+  // Mirror genPower: GST_BANK_MISMATCH fraud profiles have real activity far
+  // below declared turnover, so fuel spend must also track the suppressed base
+  // — otherwise the fraud tab shows power mismatch + fuel "Pass" on the same case.
+  const fraud = anomalyTags.includes("GST_BANK_MISMATCH");
   return periods.map((month, i) => {
     const turnover = gst ? gst[i].totalOutward : rng.lognormal(noGstBase, 0.15);
+    const real = fraud ? turnover * 0.3 : turnover;
     // Like power, real operating spend contracts as latent stress rises.
     const decline = 1 - r * 0.3 * (n > 1 ? i / (n - 1) : 0);
     const spend = Math.max(
       0,
       Math.round(
-        (turnover / 100_000) *
+        (real / 100_000) *
           intensity *
           decline *
           (1 + rng.normal(0, 0.06)) *
@@ -475,7 +481,9 @@ export function generateMsme(index: number, masterSeed = DEFAULT_SEED): RawMsme 
 
   // Fuel is generated LAST so it consumes no RNG draws ahead of any scored
   // feature — keeping the dataset (and the fitted model.json) byte-identical.
-  const fuel = rng.bool(FUEL_PRESENT_P[arch.id]) ? genFuel(rng, arch, periods, gst, r) : null;
+  const fuel = rng.bool(FUEL_PRESENT_P[arch.id])
+    ? genFuel(rng, arch, periods, gst, r, anomalyTags)
+    : null;
 
   const dataCompleteness: { source: DataSource; available: boolean; monthsCovered?: number }[] = [
     { source: "GST", available: !!gst, monthsCovered: gst ? gst.length : undefined },
@@ -483,6 +491,7 @@ export function generateMsme(index: number, masterSeed = DEFAULT_SEED): RawMsme 
     { source: "UPI", available: !!upi, monthsCovered: upi ? upi.length : undefined },
     { source: "EPFO", available: !!epfo, monthsCovered: epfo ? epfo.length : undefined },
     { source: "POWER", available: !!power, monthsCovered: power ? power.length : undefined },
+    { source: "FUEL", available: !!fuel, monthsCovered: fuel ? fuel.length : undefined },
     { source: "BUREAU", available: !!bureau },
   ];
 

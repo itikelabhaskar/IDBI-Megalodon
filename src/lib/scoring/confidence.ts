@@ -11,14 +11,14 @@ import type { RawMsme } from "../data/raw-types";
 import type { FeatureVector } from "./features";
 import type { ConfidenceAssessment, ConfidenceFactor, ConfidenceLevel } from "../types";
 
-const TIME_SERIES = new Set(["GST", "AA_BANK", "UPI", "EPFO", "POWER"]);
+const TIME_SERIES = new Set(["GST", "AA_BANK", "UPI", "EPFO", "POWER", "FUEL"]);
 
 export function assessConfidence(raw: RawMsme, f: FeatureVector): ConfidenceAssessment {
   const factors: ConfidenceFactor[] = [];
   const sources = raw.dataCompleteness;
   const available = sources.filter((s) => s.available);
   const availableCount = available.length;
-  const totalCount = sources.length || 6;
+  const totalCount = sources.length || 7;
 
   // 1. Completeness — up to 40 pts.
   const completenessPts = Math.round((availableCount / totalCount) * 40);
@@ -88,7 +88,7 @@ export function assessConfidence(raw: RawMsme, f: FeatureVector): ConfidenceAsse
   if (!f.hasGst && !f.hasBureau) {
     factors.push({
       label: "Thin file",
-      detail: "No GST or bureau — inference leans on bank, UPI and power signals",
+      detail: "No GST or bureau — inference leans on bank, UPI, power and fuel signals",
       impact: "negative",
     });
   }

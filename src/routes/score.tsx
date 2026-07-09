@@ -10,6 +10,7 @@ import { DecisionPill } from "@/components/healthlens/decision-pill";
 import { formatInr, goNoGo } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Gauge, Zap, RefreshCw, Sparkles } from "lucide-react";
+import { rupeesPerKwh, rupeesTurnoverPerFuel } from "@/lib/data/sector-intensity";
 
 export const Route = createFileRoute("/score")({
   head: () => ({
@@ -24,12 +25,16 @@ export const Route = createFileRoute("/score")({
   component: ScorePage,
 });
 
+/** Demo sector for live scoring — Electronics Wholesale intensity matches the default form. */
+const LIVE_SECTOR = "Electronics Wholesale";
+
 interface FormState {
   hasGst: boolean;
   hasUpi: boolean;
   hasEpfo: boolean;
   hasBureau: boolean;
   hasPower: boolean;
+  hasFuel: boolean;
   hasUdyam: boolean;
   gstTurnover: number;
   gstOnTime: number;
@@ -39,6 +44,10 @@ interface FormState {
   upiTrend: number;
   upiRefund: number;
   powerTrend: number;
+  /** 1.0 = power matches declared turnover; 0.3 = fraud-style under-activity. */
+  powerActivityRatio: number;
+  fuelTrend: number;
+  fuelActivityRatio: number;
   dpdDays: number;
   debtService: number;
   concentration: number;
@@ -50,6 +59,7 @@ const DEFAULTS: FormState = {
   hasEpfo: true,
   hasBureau: true,
   hasPower: true,
+  hasFuel: true,
   hasUdyam: true,
   gstTurnover: 1_800_000,
   gstOnTime: 0.95,
@@ -59,6 +69,9 @@ const DEFAULTS: FormState = {
   upiTrend: 0.12,
   upiRefund: 0.015,
   powerTrend: 0.08,
+  powerActivityRatio: 1,
+  fuelTrend: 0.05,
+  fuelActivityRatio: 1,
   dpdDays: 0,
   debtService: 0.15,
   concentration: 0.35,
@@ -67,7 +80,25 @@ const DEFAULTS: FormState = {
 function buildFeatures(s: FormState): FeatureVector {
   const gstBankTurnoverGap =
     s.hasGst && s.gstTurnover > 0 ? (s.gstTurnover - s.bankCredit) / s.gstTurnover : 0;
-  const powerAvg = (s.gstTurnover / 100_000) * 42;
+  // Sector-aware intensity so live scoring matches the main engine + fraud charts.
+  const kwhPerLakh = 100_000 / rupeesPerKwh(LIVE_SECTOR);
+  const fuelPerLakh = 100_000 / rupeesTurnoverPerFuel(LIVE_SECTOR);
+  const powerAvg = s.hasPower
+    ? (s.gstTurnover / 100_000) * kwhPerLakh * s.powerActivityRatio
+    : 0;
+  const powerImplied = s.hasPower ? powerAvg * rupeesPerKwh(LIVE_SECTOR) : 0;
+  const turnoverPowerGap =
+    s.hasGst && s.hasPower && s.gstTurnover > 0
+      ? (s.gstTurnover - powerImplied) / s.gstTurnover
+      : 0;
+  const fuelSpendAvg = s.hasFuel
+    ? (s.gstTurnover / 100_000) * fuelPerLakh * s.fuelActivityRatio
+    : 0;
+  const fuelImplied = s.hasFuel ? fuelSpendAvg * rupeesTurnoverPerFuel(LIVE_SECTOR) : 0;
+  const fuelTurnoverGap =
+    s.hasGst && s.hasFuel && s.gstTurnover > 0
+      ? (s.gstTurnover - fuelImplied) / s.gstTurnover
+      : 0;
   return {
     hasGst: s.hasGst,
     hasUpi: s.hasUpi,
@@ -94,15 +125,15 @@ function buildFeatures(s: FormState): FeatureVector {
     debtServiceRatio: s.hasBureau ? s.debtService : 0,
     dpdDays: s.hasBureau ? s.dpdDays : 0,
     hasPower: s.hasPower,
-    powerConsumptionAvg: s.hasPower ? powerAvg : 0,
+    powerConsumptionAvg: powerAvg,
     powerTrend: s.hasPower ? s.powerTrend : 0,
-    powerImpliedTurnover: s.hasPower ? powerAvg * 2600 : 0,
-    turnoverPowerGap: 0,
-    hasFuel: false,
-    fuelSpendAvg: 0,
-    fuelTrend: 0,
-    fuelImpliedActivity: 0,
-    fuelTurnoverGap: 0,
+    powerImpliedTurnover: powerImplied,
+    turnoverPowerGap,
+    hasFuel: s.hasFuel,
+    fuelSpendAvg,
+    fuelTrend: s.hasFuel ? s.fuelTrend : 0,
+    fuelImpliedActivity: fuelImplied,
+    fuelTurnoverGap,
     gstBankTurnoverGap,
     seasonalSectorFlag: false,
   };
@@ -117,9 +148,15 @@ function ScorePage() {
     const f = buildFeatures(s);
     const context: ScoreCtx = {
       hasUdyam: s.hasUdyam,
-      availableSources: [s.hasGst, s.hasUpi, s.hasEpfo, s.hasBureau, s.hasPower, true].filter(
-        Boolean,
-      ).length,
+      availableSources: [
+        s.hasGst,
+        true, // AA bank always present in live form
+        s.hasUpi,
+        s.hasEpfo,
+        s.hasPower,
+        s.hasFuel,
+        s.hasBureau,
+      ].filter(Boolean).length,
     };
     return {
       result: simulateScore(f, context),
@@ -167,6 +204,7 @@ function ScorePage() {
                   ["hasEpfo", "EPFO"],
                   ["hasBureau", "Bureau"],
                   ["hasPower", "Power"],
+                  ["hasFuel", "Fuel"],
                   ["hasUdyam", "Udyam"],
                 ] as [keyof FormState, string][]
               ).map(([k, label]) => (
@@ -259,6 +297,36 @@ function ScorePage() {
             disabled={!s.hasPower}
           />
           <SliderField
+            label="Power activity vs declared turnover"
+            value={s.powerActivityRatio}
+            min={0.2}
+            max={1.2}
+            step={0.05}
+            fmt={(v) => `${Math.round(v * 100)}%`}
+            onChange={(v) => set("powerActivityRatio", v)}
+            disabled={!s.hasPower || !s.hasGst}
+          />
+          <SliderField
+            label="Fuel-spend momentum"
+            value={s.fuelTrend}
+            min={-0.4}
+            max={0.4}
+            step={0.02}
+            fmt={(v) => `${v > 0 ? "+" : ""}${Math.round(v * 100)}%`}
+            onChange={(v) => set("fuelTrend", v)}
+            disabled={!s.hasFuel}
+          />
+          <SliderField
+            label="Fuel activity vs declared turnover"
+            value={s.fuelActivityRatio}
+            min={0.2}
+            max={1.2}
+            step={0.05}
+            fmt={(v) => `${Math.round(v * 100)}%`}
+            onChange={(v) => set("fuelActivityRatio", v)}
+            disabled={!s.hasFuel || !s.hasGst}
+          />
+          <SliderField
             label="Debt-service ratio"
             value={s.debtService}
             min={0}
@@ -316,7 +384,7 @@ function ScorePage() {
             <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
               <Stat label="Recommended limit" value={formatInr(result.recommendedLimit)} />
               <Stat label="ML viability" value={`${Math.round(result.viability * 100)}%`} />
-              <Stat label="Sources used" value={`${ctx.availableSources}/6`} />
+              <Stat label="Sources used" value={`${ctx.availableSources}/7`} />
               <Stat label="Fraud flags" value={String(flags.length)} />
             </div>
           </div>

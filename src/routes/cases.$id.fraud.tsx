@@ -93,7 +93,11 @@ function FraudPage() {
           </div>
         </header>
         <div className="p-4">
-          <PowerTriangulationChart power={data.powerConsumption} gst={data.gstTrend} />
+          <PowerTriangulationChart
+            power={data.powerConsumption}
+            gst={data.gstTrend}
+            sector={data.sector}
+          />
           {data.powerConsumption.length > 0 ? (
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
               <Metric label="12m declared (GST)" value={formatCompact(totalGst)} />

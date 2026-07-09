@@ -103,4 +103,32 @@ describe("synthetic dataset — bank-grade data quality", () => {
     ).length;
     expect(exactMatches).toBe(0);
   });
+
+  it("tracks fuel in dataCompleteness alongside power", () => {
+    for (const m of data) {
+      const sources = m.dataCompleteness.map((d) => d.source);
+      expect(sources).toContain("FUEL");
+      expect(sources).toContain("POWER");
+      expect(m.dataCompleteness.find((d) => d.source === "FUEL")?.available).toBe(!!m.fuel);
+    }
+  });
+
+  it("suppresses fuel spend on GST_BANK_MISMATCH fraud the same way as power", () => {
+    const fraudWithBoth = data.filter(
+      (m) =>
+        m.anomalyTags.includes("GST_BANK_MISMATCH") &&
+        m.gst &&
+        m.power &&
+        m.fuel &&
+        m.gst.reduce((s, g) => s + g.totalOutward, 0) > 0,
+    );
+    expect(fraudWithBoth.length).toBeGreaterThan(0);
+    for (const m of fraudWithBoth) {
+      const gstOut = m.gst!.reduce((s, g) => s + g.totalOutward, 0);
+      const fuelSpend = m.fuel!.reduce((s, f) => s + f.spend, 0);
+      // Fuel intensity is ₹/lakh; honest spend ≈ intensity * (gst/1e5). Fraud uses 0.3× base.
+      const intensity = fuelSpend / (gstOut / 100_000);
+      expect(intensity).toBeLessThan(1200); // well below honest trader intensities (~1800+)
+    }
+  });
 });
