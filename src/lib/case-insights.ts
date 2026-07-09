@@ -129,11 +129,17 @@ export function policyGates(c: MsmeCase): PolicyGate[] {
         : "GST and bank credits are within tolerance",
     },
     {
-      label: "Power-turnover match",
-      status: hasFlag("POWER_TURNOVER_MISMATCH") ? "High concern" : "Pass",
+      label: "Power / fuel operations",
+      status: hasFlag("POWER_TURNOVER_MISMATCH")
+        ? "High concern"
+        : hasFlag("FUEL_TURNOVER_MISMATCH")
+          ? "Review"
+          : "Pass",
       detail: hasFlag("POWER_TURNOVER_MISMATCH")
         ? "Utility activity below declared turnover"
-        : "Utility activity supports operations",
+        : hasFlag("FUEL_TURNOVER_MISMATCH")
+          ? "Fuel-implied activity needs officer review"
+          : "Utility and fuel activity support operations",
     },
     {
       label: "Product eligibility",
@@ -151,6 +157,7 @@ export function triangulationVerdicts(c: MsmeCase): TriangulationVerdict[] {
     c.fraudFlags.find((f) => f.code === code || f.label.includes(code));
   const gstBank = flag("GST_BANK_MISMATCH");
   const power = flag("POWER_TURNOVER_MISMATCH");
+  const fuel = flag("FUEL_TURNOVER_MISMATCH");
   const upi = c.fraudFlags.find((f) => f.code === "UPI_REFUND_SPIKE");
   const payroll = c.fraudFlags.find((f) => f.code === "PAYROLL_DIVERGENCE");
   const purchase = c.fraudFlags.find((f) => f.code === "PURCHASE_SALE_MISMATCH");
@@ -164,6 +171,11 @@ export function triangulationVerdicts(c: MsmeCase): TriangulationVerdict[] {
       label: "Power vs turnover",
       status: power ? "High concern" : "Pass",
       detail: power?.label ?? "Utility activity supports declared operations",
+    },
+    {
+      label: "Fuel vs turnover",
+      status: fuel ? "Review" : "Pass",
+      detail: fuel?.label ?? "Fuel / operational spend supports declared activity",
     },
     {
       label: "Purchase vs sale",

@@ -109,22 +109,28 @@ function bureauScore(f: FeatureVector): number | null {
   return clamp(s);
 }
 
-// Power & operations — electricity consumption confirms real operational activity
-// (IDBI's flagship alternate signal). Rewards growing/steady consumption; penalises
-// declining usage and a large gap between declared turnover and power-implied activity.
+// Operations — power and fuel/operational spend confirm real business activity.
+// Power is the flagship manufacturing signal; fuel is the trader/logistics signal
+// named in the AMA. Score every available operational feed and average them.
 function operationsScore(f: FeatureVector): number | null {
-  if (!f.hasPower) return null;
-  let s = 70;
-  if (f.powerTrend > 0.15) s += 20;
-  else if (f.powerTrend > 0.05) s += 10;
-  else if (f.powerTrend < -0.15) s -= 15;
-  else if (f.powerTrend < -0.05) s -= 7;
-  if (f.hasGst) {
-    if (f.turnoverPowerGap > 0.5)
-      s -= 30; // power far below declared turnover ⇒ activity not real
-    else if (f.turnoverPowerGap > 0.3) s -= 12;
-  }
-  return clamp(s);
+  const scoreFeed = (trend: number, gap: number, moderateGap: number, highGap: number): number => {
+    let s = 70;
+    if (trend > 0.15) s += 20;
+    else if (trend > 0.05) s += 10;
+    else if (trend < -0.15) s -= 15;
+    else if (trend < -0.05) s -= 7;
+    if (f.hasGst) {
+      if (gap > highGap) s -= 30; // operational activity far below declared turnover
+      else if (gap > moderateGap) s -= 12;
+    }
+    return clamp(s);
+  };
+
+  const scores: number[] = [];
+  if (f.hasPower) scores.push(scoreFeed(f.powerTrend, f.turnoverPowerGap, 0.3, 0.5));
+  if (f.hasFuel) scores.push(scoreFeed(f.fuelTrend, f.fuelTurnoverGap, 0.4, 0.6));
+  if (!scores.length) return null;
+  return Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
 }
 
 export function computeSubScores(f: FeatureVector, raw: RawMsme): SubScores {

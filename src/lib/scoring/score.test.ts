@@ -154,6 +154,91 @@ describe("scorecard math", () => {
     const nonSeasonal = computeSubScores({ ...volatile, seasonalSectorFlag: false }, raw).bank!;
     expect(seasonal).toBeGreaterThan(nonSeasonal); // seasonality softens the volatility penalty
   });
+
+  it("uses fuel as an operations sub-score signal when power is unavailable", () => {
+    const raw = rawWith({});
+    const fuelSupported = computeSubScores(
+      feat({ hasPower: false, hasFuel: true, fuelTrend: 0.1, fuelTurnoverGap: 0.1 }),
+      raw,
+    ).operations;
+    const fuelWeak = computeSubScores(
+      feat({ hasPower: false, hasFuel: true, fuelTrend: -0.25, fuelTurnoverGap: 0.75 }),
+      raw,
+    ).operations;
+    const missingOps = computeSubScores(feat({ hasPower: false, hasFuel: false }), raw).operations;
+
+    expect(fuelSupported).toBeGreaterThan(70);
+    expect(fuelWeak).toBeLessThan(fuelSupported!);
+    expect(missingOps).toBeNull();
+  });
+
+  it("averages power and fuel operations feeds when both are present", () => {
+    const raw = rawWith({});
+    // Power: trend +0.20 → 90; Fuel: trend -0.20 → 55; average → 73
+    const both = computeSubScores(
+      feat({
+        hasPower: true,
+        hasFuel: true,
+        hasGst: false,
+        powerTrend: 0.2,
+        fuelTrend: -0.2,
+        turnoverPowerGap: 0,
+        fuelTurnoverGap: 0,
+      }),
+      raw,
+    ).operations;
+    const powerOnly = computeSubScores(
+      feat({
+        hasPower: true,
+        hasFuel: false,
+        hasGst: false,
+        powerTrend: 0.2,
+        turnoverPowerGap: 0,
+      }),
+      raw,
+    ).operations;
+    const fuelOnly = computeSubScores(
+      feat({
+        hasPower: false,
+        hasFuel: true,
+        hasGst: false,
+        fuelTrend: -0.2,
+        fuelTurnoverGap: 0,
+      }),
+      raw,
+    ).operations;
+
+    expect(powerOnly).toBe(90);
+    expect(fuelOnly).toBe(55);
+    expect(both).toBe(73);
+  });
+
+  it("penalises fuel-vs-turnover gap in the operations sub-score when GST is present", () => {
+    const raw = rawWith({});
+    const aligned = computeSubScores(
+      feat({
+        hasPower: false,
+        hasFuel: true,
+        hasGst: true,
+        fuelTrend: 0,
+        fuelTurnoverGap: 0.1,
+      }),
+      raw,
+    ).operations;
+    const mismatched = computeSubScores(
+      feat({
+        hasPower: false,
+        hasFuel: true,
+        hasGst: true,
+        fuelTrend: 0,
+        fuelTurnoverGap: 0.7,
+      }),
+      raw,
+    ).operations;
+
+    expect(aligned).toBe(70);
+    expect(mismatched).toBe(40);
+  });
 });
 
 describe("BRE decision + limit", () => {

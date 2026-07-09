@@ -330,7 +330,7 @@ function ScorePage() {
                   ["Bank cash-flow", result.subScores.bank],
                   ["UPI", result.subScores.upi],
                   ["EPFO", result.subScores.epfo],
-                  ["Power & operations", result.subScores.operations],
+                  ["Power / fuel operations", result.subScores.operations],
                   ["Compliance", result.subScores.compliance],
                   ["Bureau-lite", result.subScores.bureau],
                 ] as [string, number | null][]

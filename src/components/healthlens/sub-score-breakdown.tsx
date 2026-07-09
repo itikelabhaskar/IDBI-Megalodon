@@ -6,7 +6,7 @@ const LABELS: Array<{ key: keyof SubScores; label: string }> = [
   { key: "bank", label: "Bank cash-flow" },
   { key: "upi", label: "UPI" },
   { key: "epfo", label: "EPFO" },
-  { key: "operations", label: "Power & operations" },
+  { key: "operations", label: "Power / fuel ops" },
   { key: "compliance", label: "Compliance" },
   { key: "bureau", label: "Bureau-lite" },
 ];

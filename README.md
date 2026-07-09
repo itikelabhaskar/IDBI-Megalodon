@@ -1,6 +1,6 @@
 # IDBI MSME HealthLens
 
-Bank-grade internal web app for IDBI credit officers — an explainable **MSME Financial Health Card** built from consented alternate data (GST, Account Aggregator bank, UPI, EPFO, **electricity / power consumption**, bureau-lite). Built for IDBI Innovate 2026, Track 03 (Financial Inclusion / Digital Lending / Credit Decisioning).
+Bank-grade internal web app for IDBI credit officers — an explainable **MSME Financial Health Card** built from consented alternate data (GST, Account Aggregator bank, UPI, EPFO, **electricity / power consumption**, fuel / operational-spend signals, bureau-lite). Built for IDBI Innovate 2026, Track 03 (Financial Inclusion / Digital Lending / Credit Decisioning).
 
 > HealthLens is a decision-support and configurable recommendation engine. IDBI remains the regulated entity and final decision owner. All data shown is synthetic prototype data.
 
@@ -73,4 +73,4 @@ the same codebase deploys to any of them with only a preset change.
 
 ## Status
 
-Track 03 MVP — full engine complete (data → features → scorecard → ML → decisioning → API → UI → governance), with an authenticated credit-officer workbench, maker–checker workflow, and live applicant scoring. 83 automated tests passing.
+Track 03 MVP — full engine complete (data → features → scorecard → ML → decisioning → API → UI → governance), with an authenticated credit-officer workbench, maker–checker workflow, and live applicant scoring. 86 automated tests passing.

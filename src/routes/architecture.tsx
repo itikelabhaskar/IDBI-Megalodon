@@ -34,6 +34,7 @@ const sources = [
   { label: "UPI", detail: "Digital receipts, refunds, velocity" },
   { label: "EPFO", detail: "Payroll continuity and staff signal" },
   { label: "DISCOM", detail: "Power consumption and utility activity" },
+  { label: "Fuel / ops costs", detail: "Trader/logistics operating spend and turnover proxy" },
   { label: "Bureau-lite", detail: "Thin-file bureau hygiene" },
 ];
 
@@ -45,7 +46,7 @@ const engineSteps = [
   {
     title: "Engineer signals",
     detail:
-      "GST-bank, UPI, EPFO, power/utility, cluster and compliance signals are scored with missing-data rules.",
+      "GST-bank, UPI, EPFO, power/fuel operations, cluster and compliance signals are scored with missing-data rules.",
   },
   {
     title: "Score + BRE",
@@ -232,8 +233,8 @@ function ArchitecturePage() {
         </div>
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
           <Proof
-            label="Power + operations"
-            detail="DISCOM utility signal, operations score, triangulation"
+            label="Power + fuel operations"
+            detail="DISCOM utility and fuel-cost signals in the operations score"
           />
           <Proof label="NTC/NTB support" detail="No automatic rejection for thin-file cases" />
           <Proof label="Go / No-Go" detail="Decision mapped to banker language" />

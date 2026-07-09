@@ -61,7 +61,7 @@ promoted after backtesting and calibration on IDBI's anonymised portfolio.
 > retained as features but show ~0 weight on the full population because they are
 > statistically redundant with the cash-flow and GST-vs-bank signals the model has
 > already learned. They remain decision-relevant through (a) the rule-based
-> **Power & operations** sub-score (10% of the primary HealthScore), (b) the
+> **Power / fuel operations** sub-score (10% of the primary HealthScore), (b) the
 > power-vs-turnover fraud flag, and (c) thin-file applicants with no GST/bureau,
 > where power is the only confirmation of real operating activity. A sign-constrained
 > scorecard should not be forced to load a redundant feature for appearances.

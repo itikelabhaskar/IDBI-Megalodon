@@ -27,7 +27,7 @@ export interface SubScores {
   epfo: number | null;
   compliance: number | null;
   bureau: number | null;
-  operations: number | null; // power-consumption / operational-activity signal
+  operations: number | null; // power/fuel-consumption / operational-activity signal
 }
 
 export interface ReasonCode {
