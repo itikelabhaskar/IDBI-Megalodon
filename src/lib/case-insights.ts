@@ -161,6 +161,8 @@ export function triangulationVerdicts(c: MsmeCase): TriangulationVerdict[] {
   const upi = c.fraudFlags.find((f) => f.code === "UPI_REFUND_SPIKE");
   const payroll = c.fraudFlags.find((f) => f.code === "PAYROLL_DIVERGENCE");
   const purchase = c.fraudFlags.find((f) => f.code === "PURCHASE_SALE_MISMATCH");
+  const hasPower = c.dataCompleteness.some((d) => d.source === "POWER" && d.available);
+  const hasFuel = c.dataCompleteness.some((d) => d.source === "FUEL" && d.available);
   return [
     {
       label: "GST vs bank",
@@ -169,13 +171,17 @@ export function triangulationVerdicts(c: MsmeCase): TriangulationVerdict[] {
     },
     {
       label: "Power vs turnover",
-      status: power ? "High concern" : "Pass",
-      detail: power?.label ?? "Utility activity supports declared operations",
+      status: !hasPower ? "Review" : power ? "High concern" : "Pass",
+      detail: !hasPower
+        ? "Electricity feed not consented — triangulation skipped"
+        : (power?.label ?? "Utility activity supports declared operations"),
     },
     {
       label: "Fuel vs turnover",
-      status: fuel ? "Review" : "Pass",
-      detail: fuel?.label ?? "Fuel / operational spend supports declared activity",
+      status: !hasFuel ? "Review" : fuel ? "Review" : "Pass",
+      detail: !hasFuel
+        ? "Fuel / ops-cost feed not consented — triangulation skipped"
+        : (fuel?.label ?? "Fuel / operational spend supports declared activity"),
     },
     {
       label: "Purchase vs sale",

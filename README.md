@@ -73,4 +73,4 @@ the same codebase deploys to any of them with only a preset change.
 
 ## Status
 
-Track 03 MVP — full engine complete (data → features → scorecard → ML → decisioning → API → UI → governance), with an authenticated credit-officer workbench, maker–checker workflow, and live applicant scoring. 91 automated tests passing.
+Track 03 MVP — full engine complete (data → features → scorecard → ML → decisioning → API → UI → governance), with an authenticated credit-officer workbench, maker–checker workflow, and live applicant scoring. 93 automated tests passing.
