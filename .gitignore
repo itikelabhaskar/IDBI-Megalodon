@@ -1,6 +1,9 @@
-# Archived external research drafts
+# Archived external research drafts (local only — never commit)
 archive/
 
+# Peer/research clones live in peer-research/ (local only — never commit).
+# Do not put competitor clones in Vite's default public/ directory.
+peer-research/
 public/
 
 # Dependencies

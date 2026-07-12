@@ -1,0 +1,19 @@
+# Competitor / peer research clones — never ship in deploy uploads
+peer-research/
+public/
+
+# Local / build artifacts
+node_modules
+.output
+.vinxi
+.tanstack
+.nitro
+.wrangler
+dist
+archive/
+*.log
+lint-out.txt
+lint2.txt
+.env
+.env.*
+.vscode/github-accounts.json
