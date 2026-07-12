@@ -64,7 +64,7 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <KpiCard title="Cases scored" value={String(total)} sub="Last 7 days (prototype)" />
+        <KpiCard title="Cases scored" value={String(total)} sub="Last 7 days (synthetic book)" />
         <KpiCard
           title="Approvals"
           value={`${decisions.Approve ?? 0}`}
@@ -131,8 +131,8 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
                 />
               </div>
               <p className="mt-2 text-[11px] text-muted-foreground italic">
-                Indicative figures on synthetic data; bad-rate uses hidden outcome labels. Final
-                calibration requires sandbox-data backtesting.
+                Indicative figures on synthetic data; bad-rate uses hidden outcome labels. Live
+                thresholds would be set on bank-labelled books.
               </p>
             </div>
 
@@ -171,7 +171,7 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
               <p className="mt-2 text-[11px] text-muted-foreground">{ablation.note}</p>
             </Panel>
 
-            <Panel title="Connector rails — Synthetic → Sandbox → Live">
+            <Panel title="Connector rails — Synthetic in this build">
               <ul className="space-y-1.5 text-sm">
                 {RAIL_STATUS.map((r) => (
                   <li
@@ -183,7 +183,7 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
                       <span className="text-muted-foreground"> · {r.schemaNote}</span>
                     </span>
                     <span className="rounded-md border border-border bg-muted/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      {r.mode} · stub
+                      {r.mode} · synthetic
                     </span>
                   </li>
                 ))}
@@ -209,7 +209,7 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
               />
               <Dt label="Train / test" value={`${MODEL.metrics.trainN} / ${MODEL.metrics.testN}`} />
               <Dt label="Decision tier" value="Advisory — IDBI officer accepts/overrides" />
-              <Dt label="Pilot note" value="Refit/calibrate on IDBI sandbox data before use" />
+              <Dt label="Data note" value="Held-out metrics on synthetic labels only" />
             </dl>
             <p className="mt-3 text-[11px] text-muted-foreground">
               Metrics are illustrative on synthetic data only — see docs/model-card.md. Not a

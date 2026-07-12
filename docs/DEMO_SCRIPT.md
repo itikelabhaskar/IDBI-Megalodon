@@ -11,7 +11,7 @@ Use Featured demo cases on the home dashboard, or open **Case queue**. Aim for ~
 3. **Credit-invisible coaching** — NTC thin-file → **Applicant guidance** tab (path-to-credit, schemes, what-if) then Decision for Go/No-Go.
 4. **Policy weight view** — Explainability → how present rails re-normalise into HealthScore (not a WOE table).
 5. **Maker–checker** — maker records decision; Low confidence / Incomplete forces checker.
-6. **Governance honesty** — lift, recon, rails Synthetic→Sandbox→Live, ablation note.
+6. **Governance honesty** — lift, recon, Synthetic rails labelled clearly, ablation note.
 
 ## Click path
 
@@ -25,7 +25,7 @@ Use Featured demo cases on the home dashboard, or open **Case queue**. Aim for ~
 | 6 | `/cases/$id/decision` | Go/No-Go, workflow gates |
 | 7 | `/cases/$id/explain` | Reason codes + **Policy weight view** + ML SHAP pane |
 | 8 | `/governance` | Lift tile, recon, ablation, connector rails list |
-| 9 | `/architecture` | Same rails roster — stub honesty |
+| 9 | `/architecture` | Rails roster — Synthetic labelled clearly |
 
 ## Talking points (AMA-aligned)
 
@@ -34,9 +34,10 @@ Use Featured demo cases on the home dashboard, or open **Case queue**. Aim for ~
 - Applicant guidance is officer-led coaching; sanction stays on Decision.
 - Policy weight view shows scorecard re-normalisation — thin files are not punished for absent rails.
 - Officer owns the decision; ML proxy never auto-sanctions.
-- All connectors labelled Synthetic until IDBI sandbox swap.
+- All connectors are labelled **Synthetic** in this submission build — no live ULI / OCEN / FASTag claim.
 
 ## Avoid
 
 - Claiming live bureau / ULI / FASTag.
 - Quoting model-card AUC as production performance.
+- Saying work will continue “after shortlist / after selection.”

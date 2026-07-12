@@ -37,7 +37,7 @@ export function TopBar() {
           className="hidden sm:inline-flex border-accent/40 bg-accent/10 text-foreground/80 font-normal"
         >
           <FlaskConical className="h-3 w-3 mr-1 text-accent" />
-          Prototype — synthetic data
+          Synthetic data — submission build
         </Badge>
 
         <NotificationsBell />

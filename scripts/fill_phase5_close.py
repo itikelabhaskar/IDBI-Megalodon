@@ -101,8 +101,8 @@ def fill_slide_14(prs: Presentation) -> None:
         ),
         (
             "4",
-            "Pilot-ready path, honest today",
-            "Live prototype + rails honesty panel + SETUP_GAPS → IDBI sandbox APIs on an approved AWS path after shortlist.",
+            "Schema-ready bank integration",
+            "Synthetic rails labelled clearly today; ULI / OCEN / AA contracts map onto the same case model for bank endpoints.",
         ),
     ]
 

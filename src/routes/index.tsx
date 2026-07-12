@@ -48,8 +48,6 @@ function DashboardPage() {
   let healthSum = 0;
   let requestedSum = 0;
   let recommendedSum = 0;
-  let ntcNtb = 0;
-  let ntcNtbNotRejected = 0;
   let powerAvailable = 0;
   let goodLeads = 0;
   const bands: Record<RiskBand, number> = { A: 0, B: 0, C: 0, D: 0 };
@@ -59,10 +57,6 @@ function DashboardPage() {
     else if (c.decision === "Incomplete") incomplete++;
     else reject++;
     if (c.fraudFlags.some((f) => f.severity === "high")) flagged++;
-    if (c.ntcNtb) {
-      ntcNtb++;
-      if (c.decision !== "Reject") ntcNtbNotRejected++;
-    }
     if (c.dataCompleteness.some((d) => d.source === "POWER" && d.available)) powerAvailable++;
     if (leadQuality(c).rank >= 2) goodLeads++;
     healthSum += c.healthScore;
@@ -95,7 +89,7 @@ function DashboardPage() {
             to="/architecture"
             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
           >
-            Pilot architecture
+            Architecture
             <Workflow className="h-4 w-4" />
           </Link>
           <Link
@@ -108,70 +102,7 @@ function DashboardPage() {
         </div>
       </header>
 
-      {/* Business-impact headline — the numbers IDBI cares about */}
-      <section className="grid gap-3 rounded-md border border-primary/25 bg-gradient-to-br from-primary/10 to-primary/5 p-4 sm:grid-cols-3">
-        <ImpactStat
-          value={formatInrCompact(recommendedSum)}
-          label="Credit ready to deploy"
-          sub={`across ${approve + refer} advanceable cases`}
-        />
-        <ImpactStat
-          value={`${ntcNtbNotRejected}/${ntcNtb || 1}`}
-          label="Credit-invisible MSMEs included"
-          sub={`${Math.round((ntcNtbNotRejected / (ntcNtb || 1)) * 100)}% of NTC/NTB kept in the funnel`}
-        />
-        <ImpactStat
-          value={String(goodLeads)}
-          label="Good leads surfaced"
-          sub="priority + inclusion leads for officer action"
-        />
-      </section>
-
-      <InclusionFunnelPanel story={inclusion} />
-
-      <section className="rounded-md border border-primary/20 bg-primary/5 p-4">
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]">
-          <div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <Landmark className="h-4 w-4 text-primary" />
-              Built around IDBI's Track 03 ask
-            </div>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              The prototype is positioned as a pilot-ready decision-support layer: alternate-data
-              health card, Go / Conditional / No-Go recommendation, human underwriter ownership, and
-              sandbox-ready integrations.
-            </p>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-            <ProofCard
-              icon={<Layers className="h-4 w-4" />}
-              title="Alternate data"
-              value="6 sources"
-              detail={`${powerAvailable} cases include DISCOM power signal`}
-            />
-            <ProofCard
-              icon={<TrendingUp className="h-4 w-4" />}
-              title="Good leads"
-              value={String(goodLeads)}
-              detail="priority and inclusion leads ready for officer action"
-            />
-            <ProofCard
-              icon={<FileCheck2 className="h-4 w-4" />}
-              title="Underwriter proof"
-              value="CAM + audit"
-              detail="decision reasons and override trail visible"
-            />
-            <ProofCard
-              icon={<Plug className="h-4 w-4" />}
-              title="Sandbox path"
-              value="ULI / OCEN"
-              detail="connector stubs ready to swap after shortlist"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* KPI cards */}
+      {/* Manager cockpit — volume, quality, exceptions first */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi
           icon={<Layers className="h-4 w-4" />}
@@ -225,7 +156,12 @@ function DashboardPage() {
           <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
             <Legend dot="bg-band-a" label="Approve" value={approve} pct={pct(approve)} />
             <Legend dot="bg-band-c" label="Refer" value={refer} pct={pct(refer)} />
-            <Legend dot="bg-muted-foreground" label="Incomplete" value={incomplete} pct={pct(incomplete)} />
+            <Legend
+              dot="bg-muted-foreground"
+              label="Incomplete"
+              value={incomplete}
+              pct={pct(incomplete)}
+            />
             <Legend dot="bg-band-d" label="Reject" value={reject} pct={pct(reject)} />
           </div>
           <div className="mt-4 border-t border-border pt-3 text-xs text-muted-foreground">
@@ -256,6 +192,51 @@ function DashboardPage() {
         </Panel>
       </div>
 
+      {/* Inclusion narrative — after the operational scan */}
+      <InclusionFunnelPanel story={inclusion} />
+
+      <section className="rounded-md border border-primary/20 bg-primary/5 p-4">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Landmark className="h-4 w-4 text-primary" />
+              Built around IDBI's Track 03 ask
+            </div>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Decision-support workbench for Track 03: alternate-data health card, Go / Conditional /
+              No-Go recommendation, human underwriter ownership, and schema-ready bank integrations —
+              scored on synthetic data in this submission.
+            </p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            <ProofCard
+              icon={<Layers className="h-4 w-4" />}
+              title="Alternate data"
+              value="6 sources"
+              detail={`${powerAvailable} cases include DISCOM power signal`}
+            />
+            <ProofCard
+              icon={<TrendingUp className="h-4 w-4" />}
+              title="Good leads"
+              value={String(goodLeads)}
+              detail="priority and inclusion leads ready for officer action"
+            />
+            <ProofCard
+              icon={<FileCheck2 className="h-4 w-4" />}
+              title="Underwriter proof"
+              value="CAM + audit"
+              detail="decision reasons and override trail visible"
+            />
+            <ProofCard
+              icon={<Plug className="h-4 w-4" />}
+              title="Integration surface"
+              value="ULI / OCEN"
+              detail="schema-ready contracts; rails labelled Synthetic in this build"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Featured demo cases */}
       {demos.length > 0 && (
         <Panel title="Featured demo cases">
@@ -279,16 +260,6 @@ function DashboardPage() {
           </div>
         </Panel>
       )}
-    </div>
-  );
-}
-
-function ImpactStat({ value, label, sub }: { value: string; label: string; sub: string }) {
-  return (
-    <div className="min-w-0">
-      <div className="text-2xl font-bold tabular-nums text-primary">{value}</div>
-      <div className="mt-0.5 text-sm font-semibold text-foreground">{label}</div>
-      <div className="text-[11px] text-muted-foreground">{sub}</div>
     </div>
   );
 }

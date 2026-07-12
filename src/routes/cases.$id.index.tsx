@@ -1,5 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { getCase } from "@/lib/mock-cases";
+import { CaseAttentionSummary } from "@/components/healthlens/case-attention-summary";
 import { HealthScoreGauge } from "@/components/healthlens/health-score-gauge";
 import { CreditStyleBadge } from "@/components/healthlens/credit-style-badge";
 import { SubScoreBreakdown } from "@/components/healthlens/sub-score-breakdown";
@@ -32,7 +33,9 @@ function HealthCardPage() {
   const monitor = monitoringSignals(data);
 
   return (
-    <div className="p-4 md:p-6 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
+    <>
+      <CaseAttentionSummary data={data} />
+      <div className="p-4 md:p-6 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
       <div className="space-y-6 min-w-0">
         <section className="rounded-md border border-border bg-surface p-4 md:p-6">
           <div className="grid grid-cols-1 md:grid-cols-[240px_minmax(0,1fr)] gap-6 items-start">
@@ -157,6 +160,7 @@ function HealthCardPage() {
         </div>
       </aside>
     </div>
+    </>
   );
 }
 

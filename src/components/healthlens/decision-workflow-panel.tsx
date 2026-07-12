@@ -267,7 +267,7 @@ export function DecisionWorkflowPanel({ data }: { data: MsmeCase }) {
         ) : (
           <p className="mt-2 text-[11px] text-muted-foreground">
             No documents attached. Officers can request and attach bank statements, GST returns or
-            KYC here (prototype — files are listed locally, not uploaded).
+            KYC here (synthetic build — files are listed locally, not uploaded).
           </p>
         )}
       </div>

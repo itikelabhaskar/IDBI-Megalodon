@@ -193,7 +193,7 @@ export function CamPreview({ data }: { data: MsmeCase }) {
           IDBI's authorised credit officer. HealthLens is a decision-support and configurable
           recommendation engine. IDBI remains the regulated entity and final decision owner. All
           figures derive from consented alternate data sources for the stated 12-month window.
-          Synthetic prototype data — not for live decisioning.
+          Synthetic data — not for live decisioning.
         </footer>
       </article>
     </div>

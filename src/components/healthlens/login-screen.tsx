@@ -42,7 +42,7 @@ export function LoginScreen() {
         >
           <h1 className="text-sm font-semibold text-foreground">Sign in to continue</h1>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
-            Prototype access — no real credentials are checked or stored off-device.
+            Submission access — no real credentials are checked or stored off-device.
           </p>
 
           <div className="mt-4 space-y-1.5">
@@ -115,7 +115,7 @@ export function LoginScreen() {
         </form>
 
         <p className="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground">
-          Decision-support prototype. IDBI remains the regulated entity and final decision owner.
+          Decision-support workbench. IDBI remains the regulated entity and final decision owner.
           All data shown is synthetic.
         </p>
       </div>

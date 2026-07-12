@@ -1,41 +1,26 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { getCase } from "@/lib/mock-cases";
-import { getSimulatorSeed, type SimulatorSeed } from "@/lib/data/dataset";
 import { DecisionPanel } from "@/components/healthlens/decision-panel";
 import { DecisionWorkflowPanel } from "@/components/healthlens/decision-workflow-panel";
 import { ProductRoutingCard } from "@/components/healthlens/product-routing-card";
-import { PathToCreditPanel } from "@/components/healthlens/path-to-credit-panel";
-import { SchemeReadinessPanel } from "@/components/healthlens/scheme-readiness-panel";
-import { WhatIfSimulator } from "@/components/healthlens/what-if-simulator";
 import { PolicyGateGrid } from "@/components/healthlens/policy-gate-grid";
 import { nextOfficerAction, policyGates } from "@/lib/case-insights";
-import { getRawById } from "@/lib/data/dataset";
-import { computeFeatures } from "@/lib/scoring/features";
-import { hardFlags, schemeReadiness } from "@/lib/scoring/decision";
+import { Link } from "@tanstack/react-router";
 import { ArrowRight, ClipboardCheck } from "lucide-react";
 
 export const Route = createFileRoute("/cases/$id/decision")({
   loader: ({ params }) => {
     const data = getCase(params.id);
     if (!data) throw notFound();
-    return { case: data, seed: getSimulatorSeed(params.id) };
+    return { case: data };
   },
   component: DecisionPage,
 });
 
 function DecisionPage() {
-  const { case: data, seed } = Route.useLoaderData() as {
-    case: import("@/lib/types").MsmeCase;
-    seed: SimulatorSeed | undefined;
-  };
+  const { case: data } = Route.useLoaderData() as { case: import("@/lib/types").MsmeCase };
   const action = nextOfficerAction(data);
-  const raw = getRawById(data.id);
-  const schemes = raw
-    ? (() => {
-        const f = computeFeatures(raw);
-        return schemeReadiness(raw, f, data.decision, hardFlags(f));
-      })()
-    : [];
+
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-5xl">
       <section className="rounded-md border border-primary/20 bg-primary/5 p-4">
@@ -47,11 +32,26 @@ function DecisionPage() {
             </div>
             <h2 className="mt-1 text-base font-semibold text-foreground">{action.label}</h2>
             <p className="mt-0.5 max-w-2xl text-sm text-muted-foreground">{action.description}</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Path-to-credit, schemes, and what-if live on{" "}
+              <Link
+                to="/cases/$id/guidance"
+                params={{ id: data.id }}
+                className="font-medium text-primary underline-offset-2 hover:underline"
+              >
+                Applicant guidance
+              </Link>{" "}
+              — this tab is for the Go / No-Go and maker–checker call.
+            </p>
           </div>
-          <div className="inline-flex items-center gap-1.5 rounded-md border border-primary/20 bg-surface px-3 py-2 text-xs font-medium text-primary">
-            Review evidence
+          <Link
+            to="/cases/$id/guidance"
+            params={{ id: data.id }}
+            className="inline-flex items-center gap-1.5 rounded-md border border-primary/20 bg-surface px-3 py-2 text-xs font-medium text-primary"
+          >
+            Open guidance
             <ArrowRight className="h-3.5 w-3.5" />
-          </div>
+          </Link>
         </div>
       </section>
       <DecisionPanel data={data} />
@@ -61,11 +61,6 @@ function DecisionPage() {
         <PolicyGateGrid gates={policyGates(data)} />
       </section>
       <ProductRoutingCard data={data} />
-      {seed && <WhatIfSimulator seed={seed} />}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <PathToCreditPanel actions={data.pathToCredit} />
-        <SchemeReadinessPanel schemes={schemes} />
-      </div>
     </div>
   );
 }

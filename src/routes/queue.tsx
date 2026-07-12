@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CaseQueueTable } from "@/components/healthlens/case-queue-table";
 import { listCases } from "@/lib/mock-cases";
 import { leadQuality } from "@/lib/format";
-import { nextOfficerAction, sourceCoverage } from "@/lib/case-insights";
+import { nextOfficerAction } from "@/lib/case-insights";
 import { AlertTriangle, CheckCircle2, FileWarning, ShieldAlert, UsersRound } from "lucide-react";
 
 export const Route = createFileRoute("/queue")({
@@ -25,7 +25,11 @@ function QueuePage() {
   const inclusion = cases.filter((c) => leadQuality(c).label === "Inclusion lead").length;
   const manual = cases.filter((c) => nextOfficerAction(c).label === "Review route").length;
   const highRisk = cases.filter((c) => c.fraudFlags.some((f) => f.severity === "high")).length;
-  const missing = cases.filter((c) => sourceCoverage(c).missing.length > 0).length;
+  // Actionable evidence gaps — Incomplete or multi-rail resolve, not any missing source / reject path
+  const evidenceGaps = cases.filter((c) => {
+    const action = nextOfficerAction(c).label;
+    return c.decision === "Incomplete" || action === "Resolve data gap";
+  }).length;
   return (
     <div className="p-4 md:p-6 space-y-4">
       <header className="min-w-0">
@@ -65,9 +69,9 @@ function QueuePage() {
         />
         <QueueMetric
           icon={<AlertTriangle className="h-4 w-4 text-muted-foreground" />}
-          label="Missing evidence"
-          value={missing}
-          detail="At least one source gap"
+          label="Evidence gaps"
+          value={evidenceGaps}
+          detail="Incomplete or multi-rail resolve"
         />
       </div>
       <CaseQueueTable cases={cases} />

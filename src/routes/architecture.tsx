@@ -18,11 +18,11 @@ import { RAIL_STATUS } from "@/lib/connectors/rail-status";
 export const Route = createFileRoute("/architecture")({
   head: () => ({
     meta: [
-      { title: "Pilot architecture · IDBI MSME HealthLens" },
+      { title: "Architecture · IDBI MSME HealthLens" },
       {
         name: "description",
         content:
-          "Data-flow, sandbox integration and governance architecture for IDBI MSME HealthLens.",
+          "Data-flow, integration surface and governance architecture for IDBI MSME HealthLens.",
       },
     ],
   }),
@@ -63,7 +63,7 @@ const outputs = [
   { label: "Officer queue", detail: "Ranked cases and lead prioritization" },
   { label: "Health card", detail: "Sub-scores, trends, source coverage" },
   { label: "CAM export", detail: "Credit memo with audit references" },
-  { label: "ULI / OCEN", detail: "Schema-ready API surface for sandbox" },
+  { label: "ULI / OCEN", detail: "Schema-ready API surface for bank integration" },
   { label: "Governance", detail: "Consent, override, model-card monitoring" },
 ];
 
@@ -83,14 +83,14 @@ function ArchitecturePage() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Pilot readiness
+            System design
           </div>
           <h1 className="mt-1 text-xl font-semibold text-foreground">
             Architecture &amp; data flow
           </h1>
           <p className="mt-0.5 max-w-3xl text-sm text-muted-foreground">
-            How HealthLens swaps prototype connectors for IDBI sandbox APIs while keeping the same
-            scorecard, explainability, CAM and governance workflow.
+            How consented alternate-data rails feed the HealthLens scorecard, explainability, CAM and
+            governance workflow — with connectors labelled Synthetic in this submission build.
           </p>
         </div>
         <Link
@@ -104,7 +104,7 @@ function ArchitecturePage() {
 
       <section className="rounded-md border border-primary/20 bg-primary/5 p-4">
         <div className="text-[10px] uppercase tracking-widest text-primary font-semibold">
-          End-to-end pilot flow
+          End-to-end decision flow
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {runtimeFlow.map((step, index) => (
@@ -172,12 +172,12 @@ function ArchitecturePage() {
       <div className="grid gap-6 lg:grid-cols-3">
         <InfoPanel
           icon={<Plug className="h-4 w-4" />}
-          title="Sandbox swap path"
-          eyebrow="After shortlist"
+          title="Integration boundary"
+          eyebrow="Schema-ready"
           points={[
-            "Replace deterministic connector stubs with IDBI / partner sandbox endpoints.",
-            "Keep the same Zod-validated API contracts for ULI, OCEN and AA-style requests.",
-            "Run synthetic and sandbox cases side-by-side before pilot tuning.",
+            "Connectors use stable payload shapes for AA, GSTN, UPI, EPFO, DISCOM and bureau-style feeds.",
+            "Zod-validated API contracts for ULI, OCEN and AA-style requests sit behind the case model.",
+            "Synthetic rails demonstrate the full workbench without claiming live bank feeds.",
           ]}
         />
         <InfoPanel
@@ -196,38 +196,37 @@ function ArchitecturePage() {
           eyebrow="AWS-ready"
           points={[
             "Portable Vite + Nitro build can run behind CloudFront / Lambda or equivalent hosts.",
-            "No prototype secrets or managed datastore are required for the first demo.",
-            "Production pilot can externalize logs, consent artifacts and monitoring events.",
+            "No managed secrets or datastore are required for this synthetic submission build.",
+            "Logs, consent artifacts and monitoring events can be externalized for bank controls.",
           ]}
         />
       </div>
 
       <section className="grid gap-4 lg:grid-cols-2">
         <ModePanel
-          title="Prototype now"
+          title="This submission"
           points={[
             "Synthetic, schema-faithful MSME cases generated in-process.",
-            "Connector stubs simulate AA, GSTN, UPI, EPFO, DISCOM and bureau feeds.",
-            "Credit officer UI, CAM, audit and governance are fully demoable today.",
+            "Connectors simulate AA, GSTN, UPI, EPFO, DISCOM and bureau feeds — labelled Synthetic.",
+            "Credit officer UI, CAM, audit and governance are complete in this build.",
           ]}
         />
         <ModePanel
-          title="Sandbox later"
+          title="Bank integration surface"
           points={[
-            "Swap stubs for IDBI / partner sandbox APIs without changing the case contract.",
-            "Backtest and calibrate HealthScore, BRE thresholds and ML proxy on sandbox data.",
-            "Externalize logs, consent artifacts, monitoring and override events for pilot controls.",
+            "Live partner endpoints map onto the same case contract without redesigning the workbench.",
+            "HealthScore, BRE thresholds and ML proxy can be calibrated on bank-labelled data.",
+            "Consent artifacts, monitoring and override events stay on the same audit trail.",
           ]}
         />
       </section>
 
       <section className="rounded-md border border-border bg-surface p-4">
         <div className="text-sm font-semibold text-foreground">
-          Connector rails — Synthetic → Sandbox → Live
+          Connector rails — Synthetic in this build
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
-          Every rail below is stubbed and labelled Synthetic for this demo. No live ULI / OCEN /
-          FASTag claim.
+          Every rail below is labelled Synthetic. No live ULI / OCEN / FASTag claim.
         </p>
         <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {RAIL_STATUS.map((r) => (
@@ -248,11 +247,11 @@ function ArchitecturePage() {
         <div>
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <BarChart3 className="h-4 w-4 text-primary" />
-            What the prototype proves
+            What this build demonstrates
           </div>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             The UI is wired to the scoring engine, not static slides. Each item below is visible in
-            the current case workflow and can be demonstrated from the queue.
+            the case workflow and can be shown from the queue.
           </p>
         </div>
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
@@ -272,9 +271,9 @@ function ArchitecturePage() {
           <div>
             <div className="text-sm font-semibold text-foreground">Compliance posture</div>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Prototype data is synthetic. Sandbox data would be processed with explicit consent,
-              purpose limitation, source-level availability, officer-visible explanations and
-              audit-retained decisions aligned to RBI / DPDP expectations.
+              All case data in this build is synthetic. Bank-sourced data would be processed with
+              explicit consent, purpose limitation, source-level availability, officer-visible
+              explanations and audit-retained decisions aligned to RBI / DPDP expectations.
             </p>
           </div>
         </div>

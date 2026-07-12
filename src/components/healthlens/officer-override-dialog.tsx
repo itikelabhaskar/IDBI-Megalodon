@@ -80,7 +80,7 @@ export function OfficerOverrideDialog({
             disabled={reason.trim().length < 8 || next === decision}
             onClick={() => {
               toast.success(`Override recorded: ${decision} → ${next}`, {
-                description: "Audit entry added (prototype).",
+                description: "Audit entry added (synthetic build).",
               });
               setOpen(false);
               setReason("");

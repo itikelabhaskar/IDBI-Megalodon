@@ -55,8 +55,8 @@ export function ConsentPanel({ data }: { data: MsmeCase }) {
           size="sm"
           variant="ghost"
           onClick={() =>
-            toast.message("Revocation request would be sent to the AA in production.", {
-              description: "Prototype only — no action taken.",
+            toast.message("Revocation is simulated in this build.", {
+              description: "No live AA call is made — data remains synthetic.",
             })
           }
         >

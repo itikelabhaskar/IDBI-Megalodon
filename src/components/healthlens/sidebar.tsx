@@ -45,7 +45,7 @@ const NAV: NavItem[] = [
   },
   {
     to: "/architecture",
-    label: "Pilot Architecture",
+    label: "Architecture",
     icon: Workflow,
     roles: ["Credit Officer", "Risk Admin"],
   },
