@@ -42,6 +42,8 @@ secrets.json
 
 # OS / editor
 .DS_Store
+.cursor/
+.vscode/
 
 
 # Lint/scratch logs
