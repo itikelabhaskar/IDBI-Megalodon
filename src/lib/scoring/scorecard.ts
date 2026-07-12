@@ -120,7 +120,8 @@ function operationsScore(f: FeatureVector): number | null {
     else if (trend < -0.15) s -= 15;
     else if (trend < -0.05) s -= 7;
     if (f.hasGst) {
-      if (gap > highGap) s -= 30; // operational activity far below declared turnover
+      if (gap > highGap)
+        s -= 30; // operational activity far below declared turnover
       else if (gap > moderateGap) s -= 12;
     }
     return clamp(s);

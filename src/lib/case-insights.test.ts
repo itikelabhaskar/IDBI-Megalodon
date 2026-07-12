@@ -27,8 +27,8 @@ describe("case-insights triangulation honesty", () => {
       (v) => v.label === "Fuel vs turnover",
     );
     expect(fuelGate?.status).toBe("Review");
-    expect(policyGates(fuelMismatch!).find((g) => g.label === "Power / fuel operations")?.status).toBe(
-      "Review",
-    );
+    expect(
+      policyGates(fuelMismatch!).find((g) => g.label === "Power / fuel operations")?.status,
+    ).toBe("Review");
   });
 });

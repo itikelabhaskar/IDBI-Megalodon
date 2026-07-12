@@ -83,9 +83,7 @@ function buildFeatures(s: FormState): FeatureVector {
   // Sector-aware intensity so live scoring matches the main engine + fraud charts.
   const kwhPerLakh = 100_000 / rupeesPerKwh(LIVE_SECTOR);
   const fuelPerLakh = 100_000 / rupeesTurnoverPerFuel(LIVE_SECTOR);
-  const powerAvg = s.hasPower
-    ? (s.gstTurnover / 100_000) * kwhPerLakh * s.powerActivityRatio
-    : 0;
+  const powerAvg = s.hasPower ? (s.gstTurnover / 100_000) * kwhPerLakh * s.powerActivityRatio : 0;
   const powerImplied = s.hasPower ? powerAvg * rupeesPerKwh(LIVE_SECTOR) : 0;
   const turnoverPowerGap =
     s.hasGst && s.hasPower && s.gstTurnover > 0
@@ -96,9 +94,7 @@ function buildFeatures(s: FormState): FeatureVector {
     : 0;
   const fuelImplied = s.hasFuel ? fuelSpendAvg * rupeesTurnoverPerFuel(LIVE_SECTOR) : 0;
   const fuelTurnoverGap =
-    s.hasGst && s.hasFuel && s.gstTurnover > 0
-      ? (s.gstTurnover - fuelImplied) / s.gstTurnover
-      : 0;
+    s.hasGst && s.hasFuel && s.gstTurnover > 0 ? (s.gstTurnover - fuelImplied) / s.gstTurnover : 0;
   return {
     hasGst: s.hasGst,
     hasUpi: s.hasUpi,
