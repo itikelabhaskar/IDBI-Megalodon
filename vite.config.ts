@@ -22,7 +22,7 @@ export default defineConfig({
     },
   },
   plugins: [
-    tsConfigPaths(),
+    tsConfigPaths({ ignoreConfigErrors: true }),
     tailwindcss(),
     tanstackStart({ server: { entry: "server" } }),
     nitro({ preset: process.env.NITRO_PRESET || "vercel", noExternals: true }),

@@ -7,6 +7,8 @@ import {
   BarChart3,
   Sparkles,
   ChevronsUpDown,
+  PanelLeftClose,
+  PanelLeftOpen,
   UserRound,
   Settings,
   LogOut,
@@ -14,7 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useRole, type Role } from "@/lib/role-context";
-import { BrandLockup } from "./brand";
+import { BrandLockup, BrandMark } from "./brand";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -51,7 +53,12 @@ const NAV: NavItem[] = [
   { to: "/portfolio", label: "Portfolio Simulator", icon: BarChart3, roles: ["Risk Admin"] },
 ];
 
-export function Sidebar() {
+type SidebarProps = {
+  collapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
+};
+
+export function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
   const { role, setRole, user, signOut } = useRole();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const name = user?.name ?? "Officer";
@@ -65,14 +72,43 @@ export function Sidebar() {
   return (
     <aside
       data-no-print="true"
-      className="hidden md:flex w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border"
+      className={cn(
+        "sticky top-0 hidden h-screen shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 md:flex",
+        collapsed ? "w-16" : "w-60",
+      )}
     >
-      <div className="px-4 pt-5 pb-4">
-        <BrandLockup tone="dark" />
+      <div
+        className={cn(
+          "flex items-center gap-2 px-4 pb-4 pt-5",
+          collapsed && "flex-col justify-center px-2",
+        )}
+      >
+        {collapsed ? <BrandMark className="h-9 w-9" /> : <BrandLockup tone="dark" />}
+        <button
+          type="button"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          onClick={() => onCollapsedChange(!collapsed)}
+          className={cn(
+            "ml-auto grid h-8 w-8 shrink-0 place-items-center rounded-md text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+            collapsed && "ml-0",
+          )}
+        >
+          {collapsed ? (
+            <PanelLeftOpen className="h-4 w-4" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4" />
+          )}
+        </button>
       </div>
 
-      <nav className="px-2">
-        <div className="px-3 pb-2 text-[10px] uppercase tracking-widest text-sidebar-foreground/50">
+      <nav className="min-h-0 flex-1 overflow-y-auto px-2">
+        <div
+          className={cn(
+            "px-3 pb-2 text-[10px] uppercase tracking-widest text-sidebar-foreground/50",
+            collapsed && "sr-only",
+          )}
+        >
           Workspace
         </div>
         <ul className="space-y-0.5">
@@ -84,15 +120,18 @@ export function Sidebar() {
               <li key={item.to}>
                 <Link
                   to={item.to}
+                  aria-label={collapsed ? item.label : undefined}
+                  title={collapsed ? item.label : undefined}
                   className={cn(
                     "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
+                    collapsed && "justify-center px-2",
                     active
                       ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{item.label}</span>
+                  <span className={cn("truncate", collapsed && "sr-only")}>{item.label}</span>
                 </Link>
               </li>
             );
@@ -100,25 +139,33 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      <div className="flex-1" />
-
       <div className="border-t border-sidebar-border/60 p-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors hover:bg-sidebar-accent/60"
+              aria-label="Open account menu"
+              title={collapsed ? `${name} · ${role}` : undefined}
+              className={cn(
+                "flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors hover:bg-sidebar-accent/60",
+                collapsed && "justify-center px-1",
+              )}
             >
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs font-semibold">
                 {initials}
               </span>
-              <span className="min-w-0 flex-1 leading-tight">
+              <span className={cn("min-w-0 flex-1 leading-tight", collapsed && "sr-only")}>
                 <span className="block truncate text-[13px] font-medium">{name}</span>
                 <span className="block truncate text-[11px] text-sidebar-foreground/60">
                   {role}
                 </span>
               </span>
-              <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-sidebar-foreground/50" />
+              <ChevronsUpDown
+                className={cn(
+                  "h-3.5 w-3.5 shrink-0 text-sidebar-foreground/50",
+                  collapsed && "hidden",
+                )}
+              />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side="top" align="start" className="w-56">

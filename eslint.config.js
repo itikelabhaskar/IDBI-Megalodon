@@ -16,6 +16,8 @@ export default tseslint.config(
       ".tanstack",
       ".vinxi",
       "archive/**",
+      "peer-research/**",
+      "public/**",
     ],
   },
   {
