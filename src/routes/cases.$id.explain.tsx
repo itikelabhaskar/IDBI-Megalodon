@@ -4,7 +4,9 @@ import { ReasonCodeList } from "@/components/healthlens/reason-code-list";
 import { SubScoreBreakdown } from "@/components/healthlens/sub-score-breakdown";
 import { ContributionChart } from "@/components/healthlens/contribution-chart";
 import { PolicyGateGrid } from "@/components/healthlens/policy-gate-grid";
+import { PolicyWeightPanel } from "@/components/healthlens/policy-weight-panel";
 import { policyGates } from "@/lib/case-insights";
+import { policyWeightRows } from "@/lib/scoring/policy-weights";
 
 export const Route = createFileRoute("/cases/$id/explain")({
   loader: ({ params }) => {
@@ -27,6 +29,8 @@ function ExplainPage() {
     .slice(0, 2)
     .map((r) => r.label)
     .join("; ");
+  const ntcOpsBoost = data.ntcNtb && data.subScores.gst === null && data.subScores.bureau === null;
+  const weightRows = policyWeightRows(data.subScores, ntcOpsBoost);
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -79,6 +83,8 @@ function ExplainPage() {
           {downsides ? `, weighed against ${downsides}` : ""}.
         </div>
       </section>
+
+      <PolicyWeightPanel rows={weightRows} healthScore={data.healthScore} />
 
       {/* (b) AI signal explanation */}
       <section className="rounded-md border border-border bg-surface">

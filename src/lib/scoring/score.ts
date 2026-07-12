@@ -217,6 +217,7 @@ export function scoreCase(raw: RawMsme): MsmeCase {
     powerConsumption: buildPower(raw),
     fuelConsumption: buildFuel(raw),
     buyerConcentration: buildBuyers(raw, f.gstConcentration),
+    upiTopCounterpartyShare: f.hasUpi ? f.upiConcentration : null,
 
     audit: buildAudit(raw, healthScore, band, secs),
     scoredInSeconds: secs,

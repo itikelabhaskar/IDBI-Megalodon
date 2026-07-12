@@ -13,6 +13,8 @@ import { rupeesPerKwh, rupeesTurnoverPerFuel } from "@/lib/data/sector-intensity
 import { formatInrCompact } from "@/lib/format";
 import { triangulationVerdicts } from "@/lib/case-insights";
 import { AuthenticityBand } from "@/components/healthlens/authenticity-band";
+import { NetworkConcentrationPanel } from "@/components/healthlens/network-concentration-panel";
+import { networkConcentration } from "@/lib/analytics/network-concentration";
 
 export const Route = createFileRoute("/cases/$id/fraud")({
   loader: ({ params }) => {
@@ -39,6 +41,7 @@ function FraudPage() {
   const fuelMismatchPct =
     totalGst === 0 ? 0 : Math.round(((totalGst - impliedFromFuel) / totalGst) * 100);
   const verdicts = triangulationVerdicts(data);
+  const network = networkConcentration(data);
   const worst = verdicts.some((v) => v.status === "High concern")
     ? "High concern"
     : verdicts.some((v) => v.status === "Review")
@@ -61,6 +64,8 @@ function FraudPage() {
           <TriangulationVerdictGrid verdicts={verdicts} />
         </div>
       </section>
+
+      <NetworkConcentrationPanel data={network} />
 
       <section className="rounded-md border border-border bg-surface">
         <header className="border-b border-border px-4 py-3">

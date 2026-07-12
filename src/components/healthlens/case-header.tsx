@@ -21,6 +21,7 @@ type TabDef = { suffix: string; label: string; pathSegment: string };
 const TABS: TabDef[] = [
   { suffix: "", label: "Health Card", pathSegment: "" },
   { suffix: "/decision", label: "Decision", pathSegment: "decision" },
+  { suffix: "/guidance", label: "Applicant guidance", pathSegment: "guidance" },
   { suffix: "/explain", label: "Explainability", pathSegment: "explain" },
   { suffix: "/fraud", label: "Fraud & Triangulation", pathSegment: "fraud" },
   { suffix: "/consent", label: "Consent & Fetch", pathSegment: "consent" },

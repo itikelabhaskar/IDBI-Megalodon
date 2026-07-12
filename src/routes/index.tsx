@@ -2,10 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import type { RiskBand } from "@/lib/types";
 import { listCases } from "@/lib/mock-cases";
 import {
-  creditInvisibleLift,
   getDemoCases,
   reconciliationRates,
 } from "@/lib/analytics/portfolio";
+import { inclusionFunnelStory } from "@/lib/analytics/inclusion-story";
+import { InclusionFunnelPanel } from "@/components/healthlens/inclusion-funnel-panel";
 import { RiskBandChip } from "@/components/healthlens/risk-band-chip";
 import { formatInrCompact, leadQuality } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -71,7 +72,7 @@ function DashboardPage() {
   }
   const avgHealth = Math.round(healthSum / total);
   const pct = (n: number) => Math.round((n / total) * 100);
-  const lift = creditInvisibleLift(cases);
+  const inclusion = inclusionFunnelStory(cases);
   const recon = reconciliationRates(cases);
 
   return (
@@ -125,6 +126,8 @@ function DashboardPage() {
           sub="priority + inclusion leads for officer action"
         />
       </section>
+
+      <InclusionFunnelPanel story={inclusion} />
 
       <section className="rounded-md border border-primary/20 bg-primary/5 p-4">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]">
@@ -185,8 +188,8 @@ function DashboardPage() {
         <Kpi
           icon={<CheckCircle2 className="h-4 w-4 text-band-a" />}
           label="Credit-invisible lift"
-          value={`${lift.inclusionLiftPct}%`}
-          sub={`${lift.keptInFunnel}/${lift.ntcCount || 1} NTC kept out of Reject`}
+          value={`${inclusion.inclusionLiftPct}%`}
+          sub={`${inclusion.keptInFunnel}/${inclusion.ntcCount || 1} NTC kept out of Reject`}
         />
         <Kpi
           icon={<ShieldAlert className="h-4 w-4 text-band-d" />}

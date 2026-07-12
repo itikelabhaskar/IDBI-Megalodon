@@ -17,6 +17,7 @@ import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CasesIdRouteImport } from './routes/cases.$id'
 import { Route as CasesIdIndexRouteImport } from './routes/cases.$id.index'
+import { Route as CasesIdGuidanceRouteImport } from './routes/cases.$id.guidance'
 import { Route as CasesIdFraudRouteImport } from './routes/cases.$id.fraud'
 import { Route as CasesIdExplainRouteImport } from './routes/cases.$id.explain'
 import { Route as CasesIdDecisionRouteImport } from './routes/cases.$id.decision'
@@ -63,6 +64,11 @@ const CasesIdIndexRoute = CasesIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CasesIdRoute,
 } as any)
+const CasesIdGuidanceRoute = CasesIdGuidanceRouteImport.update({
+  id: '/guidance',
+  path: '/guidance',
+  getParentRoute: () => CasesIdRoute,
+} as any)
 const CasesIdFraudRoute = CasesIdFraudRouteImport.update({
   id: '/fraud',
   path: '/fraud',
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/cases/$id/decision': typeof CasesIdDecisionRoute
   '/cases/$id/explain': typeof CasesIdExplainRoute
   '/cases/$id/fraud': typeof CasesIdFraudRoute
+  '/cases/$id/guidance': typeof CasesIdGuidanceRoute
   '/cases/$id/': typeof CasesIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/cases/$id/decision': typeof CasesIdDecisionRoute
   '/cases/$id/explain': typeof CasesIdExplainRoute
   '/cases/$id/fraud': typeof CasesIdFraudRoute
+  '/cases/$id/guidance': typeof CasesIdGuidanceRoute
   '/cases/$id': typeof CasesIdIndexRoute
 }
 export interface FileRoutesById {
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/cases/$id/decision': typeof CasesIdDecisionRoute
   '/cases/$id/explain': typeof CasesIdExplainRoute
   '/cases/$id/fraud': typeof CasesIdFraudRoute
+  '/cases/$id/guidance': typeof CasesIdGuidanceRoute
   '/cases/$id/': typeof CasesIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/cases/$id/decision'
     | '/cases/$id/explain'
     | '/cases/$id/fraud'
+    | '/cases/$id/guidance'
     | '/cases/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/cases/$id/decision'
     | '/cases/$id/explain'
     | '/cases/$id/fraud'
+    | '/cases/$id/guidance'
     | '/cases/$id'
   id:
     | '__root__'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/cases/$id/decision'
     | '/cases/$id/explain'
     | '/cases/$id/fraud'
+    | '/cases/$id/guidance'
     | '/cases/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -249,6 +261,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasesIdIndexRouteImport
       parentRoute: typeof CasesIdRoute
     }
+    '/cases/$id/guidance': {
+      id: '/cases/$id/guidance'
+      path: '/guidance'
+      fullPath: '/cases/$id/guidance'
+      preLoaderRoute: typeof CasesIdGuidanceRouteImport
+      parentRoute: typeof CasesIdRoute
+    }
     '/cases/$id/fraud': {
       id: '/cases/$id/fraud'
       path: '/fraud'
@@ -293,6 +312,7 @@ interface CasesIdRouteChildren {
   CasesIdDecisionRoute: typeof CasesIdDecisionRoute
   CasesIdExplainRoute: typeof CasesIdExplainRoute
   CasesIdFraudRoute: typeof CasesIdFraudRoute
+  CasesIdGuidanceRoute: typeof CasesIdGuidanceRoute
   CasesIdIndexRoute: typeof CasesIdIndexRoute
 }
 
@@ -302,6 +322,7 @@ const CasesIdRouteChildren: CasesIdRouteChildren = {
   CasesIdDecisionRoute: CasesIdDecisionRoute,
   CasesIdExplainRoute: CasesIdExplainRoute,
   CasesIdFraudRoute: CasesIdFraudRoute,
+  CasesIdGuidanceRoute: CasesIdGuidanceRoute,
   CasesIdIndexRoute: CasesIdIndexRoute,
 }
 

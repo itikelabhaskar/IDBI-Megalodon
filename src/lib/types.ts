@@ -199,6 +199,8 @@ export interface MsmeCase {
   powerConsumption: TrendPoint[]; // monthly electricity units (kWh)
   fuelConsumption: TrendPoint[]; // monthly fuel / operational spend proxy (₹)
   buyerConcentration: BuyerShare[];
+  /** Mean top-counterparty share from UPI months (0–1), null when no UPI rail. */
+  upiTopCounterpartyShare: number | null;
 
   audit: AuditEvent[];
   scoredInSeconds: number;
