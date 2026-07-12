@@ -1,4 +1,4 @@
-import type { MsmeCase } from "@/lib/types";
+import type { Decision, MsmeCase } from "@/lib/types";
 import { useMemo, useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,7 @@ export function PortfolioSimulator({ cases }: { cases: MsmeCase[] }) {
     approve: result.approve - baseline.approve,
     refer: result.refer - baseline.refer,
     reject: result.reject - baseline.reject,
+    incomplete: result.incomplete - baseline.incomplete,
   };
 
   return (
@@ -36,9 +37,15 @@ export function PortfolioSimulator({ cases }: { cases: MsmeCase[] }) {
           <div className="border-b border-border px-4 py-2.5 text-xs font-semibold">
             Portfolio impact at current thresholds
           </div>
-          <div className="grid grid-cols-3 gap-px bg-border">
+          <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
             <Stat label="Approvals" value={result.approve} delta={delta.approve} tone="positive" />
             <Stat label="Refer" value={result.refer} delta={delta.refer} tone="neutral" />
+            <Stat
+              label="Incomplete"
+              value={result.incomplete}
+              delta={delta.incomplete}
+              tone="neutral"
+            />
             <Stat label="Reject" value={result.reject} delta={delta.reject} tone="negative" />
           </div>
         </div>
@@ -196,9 +203,10 @@ function evaluate(cases: MsmeCase[], policy: Policy) {
   let approve = 0;
   let refer = 0;
   let reject = 0;
+  let incomplete = 0;
   const sectorMap = new Map<
     string,
-    { sector: string; approve: number; refer: number; reject: number }
+    { sector: string; approve: number; refer: number; reject: number; incomplete: number }
   >();
   const rejectReasons = new Map<string, number>();
 
@@ -206,6 +214,7 @@ function evaluate(cases: MsmeCase[], policy: Policy) {
     const decision = applyPolicy(c, policy);
     if (decision === "Approve") approve++;
     else if (decision === "Refer") refer++;
+    else if (decision === "Incomplete") incomplete++;
     else reject++;
 
     const row = sectorMap.get(c.sector) ?? {
@@ -213,11 +222,15 @@ function evaluate(cases: MsmeCase[], policy: Policy) {
       approve: 0,
       refer: 0,
       reject: 0,
+      incomplete: 0,
     };
-    row[decision === "Approve" ? "approve" : decision === "Refer" ? "refer" : "reject"]++;
+    if (decision === "Approve") row.approve++;
+    else if (decision === "Refer") row.refer++;
+    else if (decision === "Incomplete") row.incomplete++;
+    else row.reject++;
     sectorMap.set(c.sector, row);
 
-    if (decision === "Reject") {
+    if (decision === "Reject" || decision === "Incomplete") {
       c.reasonCodes
         .filter((r) => r.polarity === "negative")
         .slice(0, 2)
@@ -229,6 +242,7 @@ function evaluate(cases: MsmeCase[], policy: Policy) {
     approve,
     refer,
     reject,
+    incomplete,
     bySector: Array.from(sectorMap.values()).sort((a, b) => b.approve - a.approve),
     topRejectReasons: Array.from(rejectReasons.entries())
       .map(([label, count]) => ({ label, count }))
@@ -237,12 +251,12 @@ function evaluate(cases: MsmeCase[], policy: Policy) {
   };
 }
 
-function applyPolicy(c: MsmeCase, p: Policy): "Approve" | "Refer" | "Reject" {
+function applyPolicy(c: MsmeCase, p: Policy): Decision {
   // Start from the engine decision; tightening a threshold can only downgrade a
-  // case (Approve → Refer → Reject), never upgrade one the engine already flagged.
-  const rank = { Approve: 0, Refer: 1, Reject: 2 } as const;
-  let decision: "Approve" | "Refer" | "Reject" = c.decision;
-  const downgrade = (to: "Refer" | "Reject") => {
+  // case (Approve → Refer → Incomplete → Reject), never upgrade one the engine already flagged.
+  const rank = { Approve: 0, Refer: 1, Incomplete: 2, Reject: 3 } as const;
+  let decision: Decision = c.decision;
+  const downgrade = (to: "Refer" | "Incomplete" | "Reject") => {
     if (rank[to] > rank[decision]) decision = to;
   };
 

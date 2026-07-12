@@ -151,15 +151,31 @@ export function computeSubScoresCtx(f: FeatureVector, ctx: ScoreCtx): SubScores 
   };
 }
 
-/** Weighted HealthScore (0–100) over available sub-scores, with re-normalisation. */
-export function computeHealthScore(sub: SubScores): number {
+/** Weighted HealthScore (0–100) over available sub-scores, with re-normalisation.
+ *  NTC thin-file (no GST, no bureau): elevate operations weight so power/fuel
+ *  corroboration visibly dominates — AMA presence-gated behaviour.
+ */
+export function computeHealthScore(
+  sub: SubScores,
+  opts?: { ntcOpsBoost?: boolean },
+): number {
+  const weights = { ...SUBSCORE_WEIGHTS };
+  if (opts?.ntcOpsBoost) {
+    weights.operations = 0.22;
+    weights.gst = 0.12;
+    weights.bureau = 0.03;
+    weights.bank = 0.28;
+    weights.upi = 0.15;
+    weights.epfo = 0.1;
+    weights.compliance = 0.1;
+  }
   let num = 0;
   let den = 0;
-  (Object.keys(SUBSCORE_WEIGHTS) as (keyof SubScores)[]).forEach((k) => {
+  (Object.keys(weights) as (keyof SubScores)[]).forEach((k) => {
     const v = sub[k];
     if (v !== null) {
-      num += SUBSCORE_WEIGHTS[k] * v;
-      den += SUBSCORE_WEIGHTS[k];
+      num += weights[k] * v;
+      den += weights[k];
     }
   });
   return den === 0 ? 0 : Math.round(num / den);

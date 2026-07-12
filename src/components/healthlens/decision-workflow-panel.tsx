@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+﻿import { useRef, useState } from "react";
 import type { MsmeCase, Decision } from "@/lib/types";
 import { useRole } from "@/lib/role-context";
 import { useWorkflow, useCaseWorkflow, statusTone, type CaseStatus } from "@/lib/workflow";
+import { makerGateMessage, requiresForcedChecker } from "@/lib/workflow-gates";
 import { cn } from "@/lib/utils";
 import { decisionToneSolid } from "@/lib/format";
 import { toast } from "sonner";
@@ -16,12 +17,15 @@ import {
   Trash2,
   MessageSquarePlus,
   Send,
+  AlertTriangle,
 } from "lucide-react";
 
 const ACTORS: Record<string, string> = {
   "Credit Officer": "Vikram Rao (Credit Officer)",
   "Risk Admin": "Priya Nair (Risk Admin)",
 };
+
+const DECISIONS: Decision[] = ["Approve", "Refer", "Reject", "Incomplete"];
 
 function StatusChip({ status }: { status: CaseStatus }) {
   return (
@@ -52,21 +56,31 @@ export function DecisionWorkflowPanel({ data }: { data: MsmeCase }) {
   const isMaker = role === "Credit Officer";
   const isChecker = role === "Risk Admin";
   const awaitingChecker = wf.status === "Pending checker";
+  const forcedHitl = requiresForcedChecker(data.confidence.level, data.decision);
+  const gateMsg = makerGateMessage(data.confidence.level, decision);
 
   const submitDecision = () => {
     if (!reason.trim()) {
       toast.error("A recommendation reason is mandatory.");
       return;
     }
+    if (data.confidence.level === "Low" && decision === "Approve" && reason.trim().length < 12) {
+      toast.error("Low confidence Approve requires a detailed reason for the checker.");
+      return;
+    }
     recordDecision(data.id, decision, reason.trim(), actor);
     setReason("");
-    toast.success(`Recommendation recorded — routed to checker for sanction.`);
+    toast.success("Recommendation recorded — routed to checker for four-eyes review.");
   };
 
   const sanction = () => {
     checkerSanction(data.id, actor, checkerNote.trim());
     setCheckerNote("");
-    toast.success("Decision sanctioned and logged.");
+    toast.success(
+      wf.makerDecision === "Incomplete"
+        ? "Incomplete confirmed — returned for data gathering."
+        : "Decision sanctioned and logged.",
+    );
   };
   const sendBack = () => {
     if (!checkerNote.trim()) {
@@ -104,8 +118,19 @@ export function DecisionWorkflowPanel({ data }: { data: MsmeCase }) {
         </div>
       </div>
 
+      {forcedHitl && (
+        <div className="flex items-start gap-2 border-b border-accent/30 bg-accent/10 px-4 py-2.5 text-[11px] text-foreground">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-foreground" />
+          <p>
+            <span className="font-semibold">Four-eyes interrupt.</span> Assessment confidence is{" "}
+            <span className="font-semibold">{data.confidence.level}</span>
+            {data.decision === "Incomplete" ? " and evidence is Incomplete" : ""}. Maker
+            recommendations route to Risk Admin — no straight-through sanction.
+          </p>
+        </div>
+      )}
+
       <div className="grid gap-4 p-4 lg:grid-cols-2">
-        {/* Maker: record recommendation */}
         <div className="rounded-md border border-border bg-background p-3">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
             <UserCheck className="h-3.5 w-3.5 text-primary" />
@@ -115,8 +140,8 @@ export function DecisionWorkflowPanel({ data }: { data: MsmeCase }) {
             Engine recommends <span className="font-semibold text-foreground">{data.decision}</span>
             . The officer owns the final call; every action is logged to the audit trail.
           </p>
-          <div className="mt-2 grid grid-cols-3 gap-1.5">
-            {(["Approve", "Refer", "Reject"] as Decision[]).map((d) => (
+          <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+            {DECISIONS.map((d) => (
               <button
                 key={d}
                 type="button"
@@ -133,6 +158,7 @@ export function DecisionWorkflowPanel({ data }: { data: MsmeCase }) {
               </button>
             ))}
           </div>
+          {gateMsg && <p className="mt-2 text-[10px] text-accent-foreground">{gateMsg}</p>}
           <Textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
@@ -146,7 +172,6 @@ export function DecisionWorkflowPanel({ data }: { data: MsmeCase }) {
           </Button>
         </div>
 
-        {/* Checker: sanction / return */}
         <div className="rounded-md border border-border bg-background p-3">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
             <ShieldCheck className="h-3.5 w-3.5 text-primary" />
@@ -182,7 +207,7 @@ export function DecisionWorkflowPanel({ data }: { data: MsmeCase }) {
             </Button>
             <Button size="sm" disabled={!isChecker || !awaitingChecker} onClick={sanction}>
               <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
-              Sanction
+              {wf.makerDecision === "Incomplete" ? "Confirm Incomplete" : "Sanction"}
             </Button>
           </div>
           {!isChecker && (
@@ -199,7 +224,6 @@ export function DecisionWorkflowPanel({ data }: { data: MsmeCase }) {
         </div>
       </div>
 
-      {/* Documents */}
       <div className="border-t border-border px-4 py-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
@@ -248,7 +272,6 @@ export function DecisionWorkflowPanel({ data }: { data: MsmeCase }) {
         )}
       </div>
 
-      {/* Notes */}
       <div className="border-t border-border px-4 py-3">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
           <MessageSquarePlus className="h-3.5 w-3.5 text-primary" />

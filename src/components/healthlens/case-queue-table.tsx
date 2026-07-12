@@ -222,7 +222,7 @@ export function CaseQueueTable({ cases }: { cases: MsmeCase[] }) {
                     label="Decision"
                     value={decision}
                     onChange={setDecision}
-                    options={["Approve", "Refer", "Reject"]}
+                    options={["Approve", "Refer", "Incomplete", "Reject"]}
                   />
                 </TableHead>
                 <TableHead>

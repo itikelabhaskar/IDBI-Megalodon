@@ -80,6 +80,7 @@ export const decisionTone: Record<Decision, string> = {
   Approve: "bg-band-a/15 text-band-a border-band-a/30",
   Refer: "bg-band-c/15 text-band-c border-band-c/30",
   Reject: "bg-band-d/15 text-band-d border-band-d/30",
+  Incomplete: "bg-muted text-muted-foreground border-border",
 };
 
 // Loud, filled variant for the single most important output — the credit decision.
@@ -87,6 +88,7 @@ export const decisionToneSolid: Record<Decision, string> = {
   Approve: "bg-band-a text-white border-band-a shadow-sm",
   Refer: "bg-band-c text-black/85 border-band-c shadow-sm",
   Reject: "bg-band-d text-white border-band-d shadow-sm",
+  Incomplete: "bg-muted-foreground text-white border-muted-foreground shadow-sm",
 };
 
 // IDBI's AMA framing of the recommendation as a "yes-go / no-go" call, driven by
@@ -95,6 +97,10 @@ export const goNoGo: Record<Decision, { label: string; hint: string }> = {
   Approve: { label: "Go", hint: "Behaviour pattern supports straight-through processing" },
   Refer: { label: "Conditional", hint: "Mixed behaviour pattern — refer for officer review" },
   Reject: { label: "No-Go", hint: "Behaviour pattern fails policy / fraud gates" },
+  Incomplete: {
+    label: "Incomplete",
+    hint: "Insufficient alternate-data rails — refuse to over-score",
+  },
 };
 
 export const sourceLabel: Record<string, string> = {
@@ -107,6 +113,16 @@ export const sourceLabel: Record<string, string> = {
   BUREAU: "Bureau",
 };
 
+export const authenticityTone: Record<
+  import("./types").AuthenticityBand,
+  string
+> = {
+  Strong: "bg-band-a/15 text-band-a border-band-a/30",
+  Adequate: "bg-band-b/15 text-band-b border-band-b/30",
+  Weak: "bg-band-d/15 text-band-d border-band-d/30",
+  Unavailable: "bg-muted text-muted-foreground border-border",
+};
+
 export type LeadQuality = {
   label: "Priority lead" | "Inclusion lead" | "Review lead" | "Watchlist";
   description: string;
@@ -115,6 +131,13 @@ export type LeadQuality = {
 
 export function leadQuality(c: MsmeCase): LeadQuality {
   const highFraud = c.fraudFlags.some((f) => f.severity === "high");
+  if (c.decision === "Incomplete") {
+    return {
+      label: "Review lead",
+      description: "Evidence Incomplete — gather rails before scoring as credit",
+      rank: 1,
+    };
+  }
   if (c.decision === "Reject" || highFraud) {
     return {
       label: "Watchlist",

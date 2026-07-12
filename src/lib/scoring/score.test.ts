@@ -18,10 +18,12 @@ import {
   routeProduct,
   gemGatesPass,
   pathToCredit,
+  evidenceInsufficient,
 } from "./decision";
 import { scoreMl } from "./ml";
 import { scoreCase, scoreDataset } from "./score";
 import { fraudFlags, reasonCodes } from "./reasons";
+import { assessAuthenticity } from "./authenticity";
 
 const VALID_GSTIN = "27AAPFU0939F1ZV";
 
@@ -434,7 +436,9 @@ describe("end-to-end on the synthetic population", () => {
       expect(c.mlProbabilityProxy).toBeGreaterThanOrEqual(0);
       expect(c.mlProbabilityProxy).toBeLessThanOrEqual(1);
       expect(["A", "B", "C", "D"]).toContain(c.riskBand);
-      expect(["Approve", "Refer", "Reject"]).toContain(c.decision);
+      expect(["Approve", "Refer", "Reject", "Incomplete"]).toContain(c.decision);
+      expect(c.authenticity).toBeDefined();
+      expect(["Strong", "Adequate", "Weak", "Unavailable"]).toContain(c.authenticity.band);
       expect(c.peerClusterPercentile).toBeGreaterThanOrEqual(0);
       expect(c.peerClusterPercentile).toBeLessThanOrEqual(100);
     }
@@ -458,7 +462,11 @@ describe("end-to-end on the synthetic population", () => {
   it("rejects fraud-suspect profiles (GST-vs-bank mismatch)", () => {
     const fraud = cases.filter((c) => archById.get(c.id) === "FRAUD_SUSPECT");
     expect(fraud.length).toBeGreaterThan(0);
-    expect(fraud.every((c) => c.decision === "Reject")).toBe(true);
+    // Incomplete can win when evidence is thin; otherwise hard fraud → Reject
+    expect(
+      fraud.every((c) => c.decision === "Reject" || c.decision === "Incomplete"),
+    ).toBe(true);
+    expect(fraud.some((c) => c.decision === "Reject")).toBe(true);
   });
 
   it("flags fuel-vs-turnover mismatch on fraud cases that have a fuel feed", () => {
@@ -492,16 +500,53 @@ describe("end-to-end on the synthetic population", () => {
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
   });
 
-  it("demonstrates approve, refer, and reject across the population (acceptance §17)", () => {
+  it("demonstrates approve, refer, reject, and incomplete across the population (acceptance §17)", () => {
     const decisions = new Set(cases.map((c) => c.decision));
     expect(decisions.has("Approve")).toBe(true);
     expect(decisions.has("Refer")).toBe(true);
     expect(decisions.has("Reject")).toBe(true);
+    expect(decisions.has("Incomplete")).toBe(true);
   });
 
   it("differentiates thin-file/NTC risk instead of blanket-approving", () => {
     const ntc = cases.filter((c) => archById.get(c.id) === "NTC_NO_GST");
-    expect(ntc.some((c) => c.decision === "Refer")).toBe(true); // some referred (discernment)
-    expect(ntc.some((c) => c.decision === "Approve")).toBe(true); // viable still approved (inclusion)
+    expect(ntc.some((c) => c.decision === "Refer" || c.decision === "Incomplete")).toBe(true);
+    expect(ntc.some((c) => c.decision === "Approve" || c.decision === "Refer")).toBe(true);
+  });
+});
+
+describe("Incomplete evidence + power identity + authenticity", () => {
+  it("returns Incomplete when fewer than two alternate rails are available", () => {
+    const thin = generateMsme(11);
+    thin.dataCompleteness = thin.dataCompleteness.map((d) =>
+      d.source === "AA_BANK" ? d : { ...d, available: false },
+    );
+    thin.gst = null;
+    thin.upi = null;
+    thin.epfo = null;
+    thin.power = null;
+    thin.fuel = null;
+    thin.bureau = null;
+    expect(evidenceInsufficient(thin)).toBe(true);
+    const scored = scoreCase(thin);
+    expect(scored.decision).toBe("Incomplete");
+    expect(scored.reasonCodes.some((r) => r.code === "DATA_INCOMPLETE")).toBe(true);
+  });
+
+  it("re-normalises HealthScore when power is flipped off (identity / presence gate)", () => {
+    const withPower = computeSubScores(feat({ hasPower: true, hasFuel: false }), rawWith({}));
+    expect(withPower.operations).not.toBeNull();
+    const renorm = computeHealthScore({ ...withPower, operations: null });
+    const filledZero = computeHealthScore({ ...withPower, operations: 0 });
+    // Missing power must re-normalise — not silently score ops as 0
+    expect(renorm).not.toBe(filledZero);
+    expect(renorm).toBeGreaterThan(0);
+  });
+
+  it("attaches authenticity assessment on every scored case", () => {
+    const c = scoreCase(generateMsme(42));
+    expect(c.authenticity.summary.length).toBeGreaterThan(0);
+    const a = assessAuthenticity(feat(), "General Trading");
+    expect(["Strong", "Adequate", "Weak", "Unavailable"]).toContain(a.band);
   });
 });

@@ -112,18 +112,19 @@ def main() -> None:
         prs.slides[2],
         "How different?\n"
         "• Full credit workflow — not a score widget: consent → HealthScore + BRE → maker–checker → CAM → governance.\n"
-        "• Power (manufacturing) and fuel (traders/logistics) sit inside the operations sub-score, not only as charts.\n"
+        "• Power (manufacturing) and fuel (traders/logistics) sit inside the operations sub-score, with sector authenticity bands.\n"
+        "• Incomplete is first-class when evidence is thin; Low confidence forces four-eyes — underwriter decides.\n"
         "• Reason codes explain the decision; ML contributions explain only the secondary viability proxy.\n"
         "\n"
         "How it solves the problem?\n"
-        "• Credit-invisible MSMEs are not auto-rejected when traditional papers are thin.\n"
+        "• Credit-invisible MSMEs are not auto-rejected; Credit-Invisible Lift is measured on the book.\n"
         "• GST vs bank vs power/fuel triangulation catches inflated turnover.\n"
-        "• Routes to real IDBI products (i-MSME Express, GeM Sahay, CGTMSE) with eligibility gates.\n"
+        "• Scheme readiness coach (Mudra / SVANidhi / CGTMSE / GeM / i-MSME) with gap checklists.\n"
         "\n"
         "USP: Pilot-ready decision-support workbench — alternate data → explainable Health Card → "
         "officer Go/No-Go — ULI/OCEN/AA-style stubs ready for sandbox swap.\n"
         "\n"
-        "Proof: Frozen MsmeCase contract · deterministic generator · leakage guard · audit hash chain · 93 tests",
+        "Proof: Frozen MsmeCase · Incomplete + HITL gates · rails honesty panel · 107 tests · live demo",
         top=2.05,
         height=3.3,
         font_size=11,
@@ -134,16 +135,16 @@ def main() -> None:
     add_body(
         prs.slides[3],
         "• MSME Financial Health Card — 7 sub-scores → HealthScore + A–D band "
-        "(incl. EPFO, power / fuel operations)\n"
-        "• Go / Conditional / No-Go with recommended limit — speaks officer language\n"
-        "• Business-need detection + IDBI product routing (GeM Sahay gates included)\n"
-        "• Fraud & triangulation — GST–bank, power, fuel; Benford advisory only\n"
-        "• Explainability + path-to-credit for Refer / Reject — underwriter keeps the call\n"
-        "• Maker–checker workflow + printable CAM preview\n"
-        "• Live applicant scoring + governance (model card, champion–challenger, audit trail)",
+        "(incl. EPFO, power / fuel authenticity)\n"
+        "• Go / Conditional / No-Go / Incomplete — Incomplete refuses to over-score thin rails\n"
+        "• Scheme readiness coach + IDBI product routing (GeM Sahay gates included)\n"
+        "• Fraud & triangulation — GST–bank, power, fuel; sector authenticity bands\n"
+        "• Path-to-credit + Low-confidence four-eyes interrupt — underwriter keeps the call\n"
+        "• Maker–checker workflow + printable CAM preview + Mode B monitoring hints\n"
+        "• Rails honesty panel (Synthetic→Sandbox→Live) + live applicant scoring + governance",
         top=1.45,
         height=3.7,
-        font_size=13,
+        font_size=12,
         hook_lines=0,
     )
 

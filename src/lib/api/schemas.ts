@@ -5,7 +5,7 @@
 import { z } from "zod";
 
 const band = z.enum(["A", "B", "C", "D"]);
-const decision = z.enum(["Approve", "Refer", "Reject"]);
+const decision = z.enum(["Approve", "Refer", "Reject", "Incomplete"]);
 
 export const ConfidenceApiSchema = z.object({
   level: z.string(),

@@ -13,6 +13,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RAIL_STATUS } from "@/lib/connectors/rail-status";
 
 export const Route = createFileRoute("/architecture")({
   head: () => ({
@@ -218,6 +219,29 @@ function ArchitecturePage() {
             "Externalize logs, consent artifacts, monitoring and override events for pilot controls.",
           ]}
         />
+      </section>
+
+      <section className="rounded-md border border-border bg-surface p-4">
+        <div className="text-sm font-semibold text-foreground">
+          Connector rails — Synthetic → Sandbox → Live
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Every rail below is stubbed and labelled Synthetic for this demo. No live ULI / OCEN /
+          FASTag claim.
+        </p>
+        <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {RAIL_STATUS.map((r) => (
+            <li key={r.id} className="rounded-md border border-border bg-background px-3 py-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-foreground">{r.label}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {r.mode}
+                </span>
+              </div>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{r.schemaNote}</p>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="grid gap-4 rounded-md border border-border bg-surface p-4 lg:grid-cols-[280px_minmax(0,1fr)]">

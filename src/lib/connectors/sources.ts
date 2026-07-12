@@ -142,3 +142,97 @@ export function fetchPower(raw: RawMsme): PowerPayload | null {
     })),
   };
 }
+
+export interface FuelMonth {
+  month: string;
+  spend: number;
+  litres: number;
+}
+export interface FuelPayload {
+  msme_id: string;
+  /** Connector honesty — prototype feed is synthetic-labelled. */
+  mode: "Synthetic";
+  labelled: true;
+  monthly: FuelMonth[];
+}
+
+/** Fuel / ops-spend feed — trader & logistics activity proxy (AMA). */
+export function fetchFuel(raw: RawMsme): FuelPayload | null {
+  if (!raw.fuel) return null;
+  return {
+    msme_id: raw.profile.msmeId,
+    mode: "Synthetic",
+    labelled: true,
+    monthly: raw.fuel.map((f) => ({
+      month: f.month,
+      spend: f.spend,
+      litres: f.litres,
+    })),
+  };
+}
+
+export interface FastagMonth {
+  month: string;
+  toll_count: number;
+  toll_amount: number;
+}
+export interface FastagPayload {
+  msme_id: string;
+  /** Sandbox mock derived from fuel activity — not a live FASTag API. */
+  mode: "Synthetic";
+  labelled: true;
+  schema_note: "FASTag toll events (synthetic from fuel litres)";
+  monthly: FastagMonth[];
+}
+
+/**
+ * FASTag sandbox mock — synthetic, labelled. Derives toll intensity from fuel
+ * litres so logistics cases can triangulate mobility without inventing a live rail.
+ */
+export function fetchFastag(raw: RawMsme): FastagPayload | null {
+  if (!raw.fuel) return null;
+  return {
+    msme_id: raw.profile.msmeId,
+    mode: "Synthetic",
+    labelled: true,
+    schema_note: "FASTag toll events (synthetic from fuel litres)",
+    monthly: raw.fuel.map((f) => ({
+      month: f.month,
+      toll_count: Math.max(1, Math.round(f.litres / 80)),
+      toll_amount: Math.round(f.spend * 0.15),
+    })),
+  };
+}
+
+export interface EwayMonth {
+  month: string;
+  bill_count: number;
+  taxable_value: number;
+}
+export interface EwayPayload {
+  msme_id: string;
+  /** Sandbox mock derived from GST outwards — not a live e-way bill API. */
+  mode: "Synthetic";
+  labelled: true;
+  schema_note: "E-way bills (synthetic from GST outward supplies)";
+  monthly: EwayMonth[];
+}
+
+/**
+ * E-way bill sandbox mock — synthetic, labelled. Uses GST outward supplies as
+ * the movement proxy for trader / logistics triangulation demos.
+ */
+export function fetchEway(raw: RawMsme): EwayPayload | null {
+  if (!raw.gst) return null;
+  return {
+    msme_id: raw.profile.msmeId,
+    mode: "Synthetic",
+    labelled: true,
+    schema_note: "E-way bills (synthetic from GST outward supplies)",
+    monthly: raw.gst.map((g) => ({
+      month: g.period,
+      bill_count: Math.max(1, Math.round(g.totalOutward / 500_000)),
+      taxable_value: Math.round(g.totalOutward * 0.85),
+    })),
+  };
+}

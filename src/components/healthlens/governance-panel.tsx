@@ -2,7 +2,15 @@ import type { MsmeCase } from "@/lib/types";
 import { useState } from "react";
 import { AuditTimeline } from "./audit-timeline";
 import { formatDateTime } from "@/lib/format";
-import { championChallenger, fairnessSlices, topRejectReasons } from "@/lib/analytics/portfolio";
+import {
+  championChallenger,
+  creditInvisibleLift,
+  fairnessSlices,
+  reconciliationRates,
+  topRejectReasons,
+} from "@/lib/analytics/portfolio";
+import { ablationSummary } from "@/lib/analytics/ablation";
+import { RAIL_STATUS } from "@/lib/connectors/rail-status";
 import { MODEL } from "@/lib/scoring/ml";
 import { cn } from "@/lib/utils";
 import {
@@ -38,6 +46,9 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
 
   // Governance analytics (computed on the full synthetic population)
   const cc = championChallenger();
+  const lift = creditInvisibleLift(cases);
+  const recon = reconciliationRates(cases);
+  const ablation = ablationSummary(cases);
   const fairness = fairnessSlices();
   const rejectReasons = topRejectReasons();
 
@@ -57,7 +68,7 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
         <KpiCard
           title="Approvals"
           value={`${decisions.Approve ?? 0}`}
-          sub={`${decisions.Refer ?? 0} refer · ${decisions.Reject ?? 0} reject`}
+          sub={`${decisions.Refer ?? 0} refer · ${decisions.Incomplete ?? 0} incomplete · ${decisions.Reject ?? 0} reject`}
         />
         <KpiCard
           title="Median score-time"
@@ -124,6 +135,61 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
                 calibration requires sandbox-data backtesting.
               </p>
             </div>
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <Metric
+                label="Credit-invisible lift"
+                value={`${lift.inclusionLiftPct}%`}
+                sub={`${lift.keptInFunnel}/${lift.ntcCount || 1} NTC kept out of Reject`}
+              />
+              <Metric
+                label="GST–bank mismatch"
+                value={`${recon.gstBankMismatchPct}%`}
+                sub={`${recon.gstBankMismatchCount} cases · portfolio recon`}
+              />
+              <Metric
+                label="Power–turnover mismatch"
+                value={`${recon.powerTurnoverMismatchPct}%`}
+                sub={`${recon.powerTurnoverMismatchCount} cases · portfolio recon`}
+              />
+            </div>
+
+            <Panel title="Ablation & anti-gaming (synthetic book)">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <Metric label="Full HealthScore μ" value={String(ablation.meanFullScore)} />
+                <Metric
+                  label="Structured-only μ"
+                  value={String(ablation.meanStructuredOnly)}
+                  sub={`Δ ${ablation.meanDelta > 0 ? "+" : ""}${ablation.meanDelta}`}
+                />
+                <Metric label="FRAUD_SUSPECT catch" value={`${ablation.fraudSuspectCatchRate}%`} />
+                <Metric
+                  label="High-flag → Reject"
+                  value={`${ablation.highFraudFlagCatchRate}%`}
+                />
+              </div>
+              <p className="mt-2 text-[11px] text-muted-foreground">{ablation.note}</p>
+            </Panel>
+
+            <Panel title="Connector rails — Synthetic → Sandbox → Live">
+              <ul className="space-y-1.5 text-sm">
+                {RAIL_STATUS.map((r) => (
+                  <li
+                    key={r.id}
+                    className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-1.5 last:border-0"
+                  >
+                    <span className="text-foreground/90">
+                      {r.label}
+                      <span className="text-muted-foreground"> · {r.schemaNote}</span>
+                    </span>
+                    <span className="rounded-md border border-border bg-muted/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      {r.mode} · stub
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+
             <Panel title="Risk-band distribution">
               <RiskDistributionChart data={distribution} />
             </Panel>
@@ -134,9 +200,9 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
           <Panel title="Model card — viability scorecard">
             <dl className="grid grid-cols-2 gap-y-1 text-sm">
               <Dt label="Owner" value="MSME Risk Analytics" />
-              <Dt label="Inputs" value="GST · AA bank · UPI · EPFO · Power · Bureau-lite" />
+              <Dt label="Inputs" value="GST · AA bank · UPI · EPFO · Power · Fuel · Bureau-lite" />
               <Dt label="Label" value="Synthetic default (leakage-free)" />
-              <Dt label="AUC (held-out)" value={MODEL.metrics.auc.toFixed(3)} />
+              <Dt label="AUC (held-out, synthetic)" value={MODEL.metrics.auc.toFixed(3)} />
               <Dt
                 label="KS / Gini"
                 value={`${MODEL.metrics.ks.toFixed(2)} / ${MODEL.metrics.gini.toFixed(2)}`}
@@ -145,6 +211,10 @@ export function GovernancePanel({ cases }: { cases: MsmeCase[] }) {
               <Dt label="Decision tier" value="Advisory — IDBI officer accepts/overrides" />
               <Dt label="Pilot note" value="Refit/calibrate on IDBI sandbox data before use" />
             </dl>
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              Metrics are illustrative on synthetic data only — see docs/model-card.md. Not a
+              production AUC claim.
+            </p>
           </Panel>
         )}
 

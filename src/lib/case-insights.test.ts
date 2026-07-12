@@ -31,4 +31,12 @@ describe("case-insights triangulation honesty", () => {
       policyGates(fuelMismatch!).find((g) => g.label === "Power / fuel operations")?.status,
     ).toBe("Review");
   });
+
+  it("surfaces Weak authenticity in triangulation verdicts", () => {
+    const weak = cases.find((c) => c.authenticity.band === "Weak");
+    expect(weak).toBeDefined();
+    const auth = triangulationVerdicts(weak!).find((v) => v.label === "Operational authenticity");
+    expect(auth?.status).toBe("Review");
+    expect(auth?.detail.toLowerCase()).toContain("weak");
+  });
 });

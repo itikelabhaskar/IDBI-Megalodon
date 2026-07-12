@@ -5,9 +5,13 @@ import { DecisionPanel } from "@/components/healthlens/decision-panel";
 import { DecisionWorkflowPanel } from "@/components/healthlens/decision-workflow-panel";
 import { ProductRoutingCard } from "@/components/healthlens/product-routing-card";
 import { PathToCreditPanel } from "@/components/healthlens/path-to-credit-panel";
+import { SchemeReadinessPanel } from "@/components/healthlens/scheme-readiness-panel";
 import { WhatIfSimulator } from "@/components/healthlens/what-if-simulator";
 import { PolicyGateGrid } from "@/components/healthlens/policy-gate-grid";
 import { nextOfficerAction, policyGates } from "@/lib/case-insights";
+import { getRawById } from "@/lib/data/dataset";
+import { computeFeatures } from "@/lib/scoring/features";
+import { hardFlags, schemeReadiness } from "@/lib/scoring/decision";
 import { ArrowRight, ClipboardCheck } from "lucide-react";
 
 export const Route = createFileRoute("/cases/$id/decision")({
@@ -25,6 +29,13 @@ function DecisionPage() {
     seed: SimulatorSeed | undefined;
   };
   const action = nextOfficerAction(data);
+  const raw = getRawById(data.id);
+  const schemes = raw
+    ? (() => {
+        const f = computeFeatures(raw);
+        return schemeReadiness(raw, f, data.decision, hardFlags(f));
+      })()
+    : [];
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-5xl">
       <section className="rounded-md border border-primary/20 bg-primary/5 p-4">
@@ -51,7 +62,10 @@ function DecisionPage() {
       </section>
       <ProductRoutingCard data={data} />
       {seed && <WhatIfSimulator seed={seed} />}
-      <PathToCreditPanel actions={data.pathToCredit} />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <PathToCreditPanel actions={data.pathToCredit} />
+        <SchemeReadinessPanel schemes={schemes} />
+      </div>
     </div>
   );
 }

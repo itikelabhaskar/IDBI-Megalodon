@@ -12,6 +12,7 @@ import {
 import { rupeesPerKwh, rupeesTurnoverPerFuel } from "@/lib/data/sector-intensity";
 import { formatInrCompact } from "@/lib/format";
 import { triangulationVerdicts } from "@/lib/case-insights";
+import { AuthenticityBand } from "@/components/healthlens/authenticity-band";
 
 export const Route = createFileRoute("/cases/$id/fraud")({
   loader: ({ params }) => {
@@ -54,6 +55,7 @@ function FraudPage() {
             </div>
             <h2 className="mt-1 text-base font-semibold text-foreground">Triangulation: {worst}</h2>
           </div>
+          <AuthenticityBand authenticity={data.authenticity} showSummary />
         </div>
         <div className="mt-3">
           <TriangulationVerdictGrid verdicts={verdicts} />

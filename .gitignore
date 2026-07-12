@@ -1,6 +1,8 @@
 # Archived external research drafts
 archive/
 
+public/
+
 # Dependencies
 node_modules
 

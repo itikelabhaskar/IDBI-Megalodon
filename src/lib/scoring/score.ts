@@ -29,7 +29,9 @@ import {
   detectBusinessNeed,
   routeProduct,
   pathToCredit,
+  evidenceInsufficient,
 } from "./decision";
+import { assessAuthenticity } from "./authenticity";
 
 function buildGstTrend(raw: RawMsme): TrendPoint[] {
   return raw.gst ? raw.gst.map((g) => ({ period: g.period, value: g.totalOutward })) : [];
@@ -139,18 +141,26 @@ function buildAudit(raw: RawMsme, healthScore: number, band: RiskBand, secs: num
 export function scoreCase(raw: RawMsme): MsmeCase {
   const f = computeFeatures(raw);
   const subScores = computeSubScores(f, raw);
-  const healthScore = computeHealthScore(subScores);
+  const ntcOpsBoost = !f.hasGst && !f.hasBureau;
+  const healthScore = computeHealthScore(subScores, { ntcOpsBoost });
   const band = riskBand(healthScore);
   const ml = scoreMl(f);
   const flags = hardFlags(f);
+  const insufficient = evidenceInsufficient(raw);
 
-  const decision0 = breDecision(band, f, flags);
+  const decision0 = breDecision(band, f, flags, insufficient);
   const limit = recommendedLimit(band, f, flags);
   const need = detectBusinessNeed(raw, f, decision0);
   const routing = routeProduct(raw, f, decision0, need, flags, limit);
   const decision = routing.decision;
 
   const reasons = reasonCodes(f);
+  if (insufficient)
+    reasons.unshift({
+      code: "DATA_INCOMPLETE",
+      polarity: "negative",
+      label: "Fewer than two alternate-data rails available — Incomplete (refuse to over-score)",
+    });
   if (routing.eligibilityGap)
     reasons.push({
       code: "PRODUCT_ELIGIBILITY_GAP",
@@ -159,6 +169,7 @@ export function scoreCase(raw: RawMsme): MsmeCase {
     });
   const path = pathToCredit(reasons, decision);
   const secs = scoredSeconds(raw);
+  const authenticity = assessAuthenticity(f, raw.profile.sector);
 
   return {
     id: raw.profile.msmeId,
@@ -181,9 +192,10 @@ export function scoreCase(raw: RawMsme): MsmeCase {
     mlProbabilityProxy: Math.round(ml.viability * 1000) / 1000,
     contributions: ml.contributions,
     confidence: assessConfidence(raw, f),
+    authenticity,
 
     decision,
-    recommendedLimit: decision === "Reject" ? 0 : limit,
+    recommendedLimit: decision === "Reject" || decision === "Incomplete" ? 0 : limit,
     tenorMonths:
       routing.route === "GeM Sahay" ? Math.max(1, Math.round(raw.profile.poTenorDays / 30)) : 12,
     detectedBusinessNeed: need,

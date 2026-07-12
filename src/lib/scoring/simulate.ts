@@ -32,6 +32,9 @@ export function simulateScore(f: FeatureVector, ctx: ScoreCtx): SimResult {
     band,
     viability: scoreMl(f).viability,
     decision,
-    recommendedLimit: decision === "Reject" ? 0 : recommendedLimit(band, f, flags),
+    recommendedLimit:
+      decision === "Reject" || decision === "Incomplete"
+        ? 0
+        : recommendedLimit(band, f, flags),
   };
 }

@@ -17,7 +17,12 @@ export {
   routeProduct,
   gemGatesPass,
   pathToCredit,
+  evidenceInsufficient,
+  schemeReadiness,
   type RoutingResult,
   type HardFlags,
+  type SchemeReadiness,
 } from "./decision";
 export { scoreCase, scoreDataset } from "./score";
+export { assessAuthenticity } from "./authenticity";
+export { simulateScore, type SimResult } from "./simulate";

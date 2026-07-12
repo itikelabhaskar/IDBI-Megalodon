@@ -43,9 +43,9 @@ export function OfficerOverrideDialog({
             <RadioGroup
               value={next}
               onValueChange={(v) => setNext(v as Decision)}
-              className="mt-2 grid grid-cols-3 gap-2"
+              className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4"
             >
-              {(["Approve", "Refer", "Reject"] as Decision[]).map((d) => (
+              {(["Approve", "Refer", "Incomplete", "Reject"] as Decision[]).map((d) => (
                 <Label
                   key={d}
                   className="flex items-center gap-2 rounded-md border border-border bg-surface px-2 py-2 text-xs cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-primary/5"

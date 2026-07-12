@@ -145,3 +145,71 @@ export function getDemoCases(): DemoCase[] {
     ),
   ].filter((d): d is DemoCase => d !== null);
 }
+
+export interface CreditInvisibleLift {
+  ntcCount: number;
+  withAltData: number;
+  keptInFunnel: number;
+  approveOrRefer: number;
+  altDataKeepRate: number;
+  inclusionLiftPct: number;
+  note: string;
+}
+
+/**
+ * Inclusion lift for credit-invisible (NTC/NTB) MSMEs: share kept out of Reject
+ * when full alt-data rails are scored, vs a bureau-thin baseline that would
+ * auto-decline thin files.
+ */
+export function creditInvisibleLift(cases: MsmeCase[]): CreditInvisibleLift {
+  const ntc = cases.filter((c) => c.ntcNtb);
+  const withAlt = ntc.filter(
+    (c) =>
+      c.dataCompleteness.filter(
+        (d) => d.available && d.source !== "AA_BANK" && d.source !== "BUREAU",
+      ).length >= 1,
+  );
+  const approveOrRefer = ntc.filter(
+    (c) => c.decision === "Approve" || c.decision === "Refer",
+  ).length;
+  const keptInFunnel = ntc.filter((c) => c.decision !== "Reject").length;
+  const altKept = withAlt.filter(
+    (c) => c.decision === "Approve" || c.decision === "Refer",
+  ).length;
+  return {
+    ntcCount: ntc.length,
+    withAltData: withAlt.length,
+    keptInFunnel,
+    approveOrRefer,
+    altDataKeepRate: withAlt.length ? Math.round((altKept / withAlt.length) * 100) : 0,
+    inclusionLiftPct: ntc.length ? Math.round((keptInFunnel / ntc.length) * 100) : 0,
+    note: "Share of NTC/NTB kept out of Reject when full alt-data rails are scored — inclusion lift vs bureau-only auto-decline.",
+  };
+}
+
+export interface ReconciliationRates {
+  population: number;
+  gstBankMismatchCount: number;
+  powerTurnoverMismatchCount: number;
+  gstBankMismatchPct: number;
+  powerTurnoverMismatchPct: number;
+}
+
+/** Portfolio-level GST–bank and power–turnover mismatch prevalence. */
+export function reconciliationRates(cases: MsmeCase[]): ReconciliationRates {
+  const population = cases.length;
+  const denom = population || 1;
+  const gstBankMismatchCount = cases.filter((c) =>
+    c.fraudFlags.some((f) => f.code === "GST_BANK_MISMATCH"),
+  ).length;
+  const powerTurnoverMismatchCount = cases.filter((c) =>
+    c.fraudFlags.some((f) => f.code === "POWER_TURNOVER_MISMATCH"),
+  ).length;
+  return {
+    population,
+    gstBankMismatchCount,
+    powerTurnoverMismatchCount,
+    gstBankMismatchPct: Math.round((gstBankMismatchCount / denom) * 1000) / 10,
+    powerTurnoverMismatchPct: Math.round((powerTurnoverMismatchCount / denom) * 1000) / 10,
+  };
+}

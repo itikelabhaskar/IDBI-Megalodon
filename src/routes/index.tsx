@@ -1,7 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { RiskBand } from "@/lib/types";
 import { listCases } from "@/lib/mock-cases";
-import { getDemoCases } from "@/lib/analytics/portfolio";
+import {
+  creditInvisibleLift,
+  getDemoCases,
+  reconciliationRates,
+} from "@/lib/analytics/portfolio";
 import { RiskBandChip } from "@/components/healthlens/risk-band-chip";
 import { formatInrCompact, leadQuality } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -38,6 +42,7 @@ function DashboardPage() {
   let approve = 0;
   let refer = 0;
   let reject = 0;
+  let incomplete = 0;
   let flagged = 0;
   let healthSum = 0;
   let requestedSum = 0;
@@ -50,6 +55,7 @@ function DashboardPage() {
   for (const c of cases) {
     if (c.decision === "Approve") approve++;
     else if (c.decision === "Refer") refer++;
+    else if (c.decision === "Incomplete") incomplete++;
     else reject++;
     if (c.fraudFlags.some((f) => f.severity === "high")) flagged++;
     if (c.ntcNtb) {
@@ -65,6 +71,8 @@ function DashboardPage() {
   }
   const avgHealth = Math.round(healthSum / total);
   const pct = (n: number) => Math.round((n / total) * 100);
+  const lift = creditInvisibleLift(cases);
+  const recon = reconciliationRates(cases);
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -176,15 +184,30 @@ function DashboardPage() {
         />
         <Kpi
           icon={<CheckCircle2 className="h-4 w-4 text-band-a" />}
-          label="NTC / NTB retained"
-          value={`${ntcNtbNotRejected}/${ntcNtb || 1}`}
-          sub="credit-invisible cases not auto-rejected"
+          label="Credit-invisible lift"
+          value={`${lift.inclusionLiftPct}%`}
+          sub={`${lift.keptInFunnel}/${lift.ntcCount || 1} NTC kept out of Reject`}
         />
         <Kpi
           icon={<ShieldAlert className="h-4 w-4 text-band-d" />}
           label="Fraud-flagged"
           value={String(flagged)}
           sub="need triangulation review"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-2">
+        <Kpi
+          icon={<FileCheck2 className="h-4 w-4" />}
+          label="GST–bank mismatch rate"
+          value={`${recon.gstBankMismatchPct}%`}
+          sub={`${recon.gstBankMismatchCount} of ${recon.population} · portfolio recon`}
+        />
+        <Kpi
+          icon={<Plug className="h-4 w-4" />}
+          label="Power–turnover mismatch"
+          value={`${recon.powerTurnoverMismatchPct}%`}
+          sub={`${recon.powerTurnoverMismatchCount} of ${recon.population} · portfolio recon`}
         />
       </div>
 
@@ -199,6 +222,7 @@ function DashboardPage() {
           <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
             <Legend dot="bg-band-a" label="Approve" value={approve} pct={pct(approve)} />
             <Legend dot="bg-band-c" label="Refer" value={refer} pct={pct(refer)} />
+            <Legend dot="bg-muted-foreground" label="Incomplete" value={incomplete} pct={pct(incomplete)} />
             <Legend dot="bg-band-d" label="Reject" value={reject} pct={pct(reject)} />
           </div>
           <div className="mt-4 border-t border-border pt-3 text-xs text-muted-foreground">

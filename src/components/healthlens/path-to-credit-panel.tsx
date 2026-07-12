@@ -1,4 +1,4 @@
-import type { PathToCreditAction } from "@/lib/types";
+﻿import type { PathToCreditAction } from "@/lib/types";
 import { ArrowRight } from "lucide-react";
 
 export function PathToCreditPanel({ actions }: { actions: PathToCreditAction[] }) {
@@ -23,6 +23,18 @@ export function PathToCreditPanel({ actions }: { actions: PathToCreditAction[] }
                 {a.action}
               </div>
               <div className="mt-0.5 text-xs text-muted-foreground">{a.rationale}</div>
+              {a.scheme && (
+                <div className="mt-1 text-[10px] font-medium uppercase tracking-wide text-primary">
+                  Scheme: {a.scheme}
+                </div>
+              )}
+              {a.gaps && a.gaps.length > 0 && (
+                <ul className="mt-1 list-inside list-disc text-[11px] text-muted-foreground">
+                  {a.gaps.map((g) => (
+                    <li key={g}>{g}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           </li>
         ))}

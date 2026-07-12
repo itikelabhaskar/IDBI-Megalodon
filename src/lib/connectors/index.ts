@@ -10,16 +10,23 @@ import {
   fetchUpi,
   fetchEpfo,
   fetchPower,
+  fetchFuel,
+  fetchFastag,
+  fetchEway,
   fetchBureau,
   type GstnPayload,
   type UpiPayload,
   type EpfoPayload,
   type PowerPayload,
+  type FuelPayload,
+  type FastagPayload,
+  type EwayPayload,
   type BureauPayload,
 } from "./sources";
 
 export * from "./aa";
 export * from "./sources";
+export * from "./rail-status";
 
 export interface AllSourcePayloads {
   aaBank: AaBankPayload;
@@ -27,6 +34,9 @@ export interface AllSourcePayloads {
   upi: UpiPayload | null;
   epfo: EpfoPayload | null;
   power: PowerPayload | null;
+  fuel: FuelPayload | null;
+  fastag: FastagPayload | null;
+  eway: EwayPayload | null;
   bureau: BureauPayload | null;
 }
 
@@ -38,6 +48,9 @@ export function fetchAllSources(raw: RawMsme): AllSourcePayloads {
     upi: fetchUpi(raw),
     epfo: fetchEpfo(raw),
     power: fetchPower(raw),
+    fuel: fetchFuel(raw),
+    fastag: fetchFastag(raw),
+    eway: fetchEway(raw),
     bureau: fetchBureau(raw),
   };
 }

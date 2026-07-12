@@ -14,6 +14,8 @@ import {
   FuelChart,
   BuyerConcentrationChart,
 } from "@/components/healthlens/charts";
+import { AuthenticityBand } from "@/components/healthlens/authenticity-band";
+import { monitoringSignals } from "@/lib/analytics/monitoring";
 
 export const Route = createFileRoute("/cases/$id/")({
   loader: ({ params }) => {
@@ -27,6 +29,7 @@ export const Route = createFileRoute("/cases/$id/")({
 function HealthCardPage() {
   const { case: data } = Route.useLoaderData() as { case: import("@/lib/types").MsmeCase };
   const missingCount = data.dataCompleteness.filter((d) => !d.available).length;
+  const monitor = monitoringSignals(data);
 
   return (
     <div className="p-4 md:p-6 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
@@ -36,6 +39,7 @@ function HealthCardPage() {
             <div className="flex flex-col items-center gap-3">
               <HealthScoreGauge score={data.healthScore} band={data.riskBand} />
               <CreditStyleBadge score={data.creditStyleScore} />
+              <AuthenticityBand authenticity={data.authenticity} showSummary />
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -130,6 +134,26 @@ function HealthCardPage() {
           HealthScore is the{" "}
           <span className="text-foreground font-medium">primary decision driver</span>. The ML proxy
           on the explainability tab is a secondary signal — it does not auto-sanction.
+        </div>
+        <div className="rounded-md border border-border bg-surface p-4">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Book monitoring (Mode B)
+          </div>
+          <dl className="mt-2 grid grid-cols-2 gap-y-1 text-xs">
+            <dt className="text-muted-foreground">Score trend</dt>
+            <dd className="text-foreground">{monitor.scoreTrend}</dd>
+            <dt className="text-muted-foreground">Renewal cue</dt>
+            <dd className="text-foreground">{monitor.renewalDue ? "Yes" : "No"}</dd>
+            <dt className="text-muted-foreground">Watchlist</dt>
+            <dd className="text-foreground">{monitor.watchlist ? "Flagged" : "Clear"}</dd>
+          </dl>
+          {monitor.reasons.length > 0 && (
+            <ul className="mt-2 list-inside list-disc text-[11px] text-muted-foreground">
+              {monitor.reasons.slice(0, 3).map((r) => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul>
+          )}
         </div>
       </aside>
     </div>

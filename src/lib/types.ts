@@ -2,7 +2,7 @@
 // Field names are FROZEN — engine outputs MsmeCase in this exact shape.
 
 export type RiskBand = "A" | "B" | "C" | "D";
-export type Decision = "Approve" | "Refer" | "Reject";
+export type Decision = "Approve" | "Refer" | "Reject" | "Incomplete";
 export type BusinessNeed =
   | "WorkingCapital"
   | "POFinance"
@@ -16,8 +16,20 @@ export type ProductRoute =
   | "GeM Sahay"
   | "CGTMSE"
   | "Digital MSME Onboarding"
-  | "Manual Review";
+  | "Manual Review"
+  | "Mudra"
+  | "SVANidhi";
 export type DataSource = "GST" | "AA_BANK" | "UPI" | "EPFO" | "BUREAU" | "POWER" | "FUEL";
+
+/** Operational authenticity band for power/fuel corroboration (HealthLens naming). */
+export type AuthenticityBand = "Strong" | "Adequate" | "Weak" | "Unavailable";
+
+export interface AuthenticityAssessment {
+  band: AuthenticityBand;
+  powerBand: AuthenticityBand;
+  fuelBand: AuthenticityBand;
+  summary: string;
+}
 
 export interface SubScores {
   // 0–100, or null when the source is missing (show as N/A)
@@ -81,6 +93,10 @@ export interface BuyerShare {
 export interface PathToCreditAction {
   action: string;
   rationale: string;
+  /** Optional scheme id when this action is part of scheme readiness coaching. */
+  scheme?: string;
+  /** What's still missing for that scheme (officer-facing checklist). */
+  gaps?: string[];
 }
 
 export interface AuditEvent {
@@ -159,6 +175,7 @@ export interface MsmeCase {
   mlProbabilityProxy: number; // 0–1 (secondary AI signal)
   contributions: Contribution[]; // explains mlProbabilityProxy ONLY
   confidence: ConfidenceAssessment; // trust in the assessment (completeness/recency/agreement)
+  authenticity: AuthenticityAssessment; // power/fuel sector authenticity band
 
   decision: Decision;
   recommendedLimit: number; // rupees, capped 2,500,000

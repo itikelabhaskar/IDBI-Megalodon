@@ -110,5 +110,8 @@ describe("connector stubs (ReBIT / AA fidelity)", () => {
     expect(all).toHaveProperty("upi");
     expect(all).toHaveProperty("epfo");
     expect(all).toHaveProperty("bureau");
+    expect(all).toHaveProperty("fuel");
+    expect(all).toHaveProperty("fastag");
+    expect(all).toHaveProperty("eway");
   });
 });

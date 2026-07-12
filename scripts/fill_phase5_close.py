@@ -86,23 +86,23 @@ def fill_slide_14(prs: Presentation) -> None:
     reasons = [
         (
             "1",
-            "Power + fuel in the score",
-            "Electricity (manufacturing) and fuel (traders/logistics) sit inside the operations sub-score — AMA-named signals, not chart decoration.",
+            "Power + fuel authenticity",
+            "Electricity and fuel sit in operations with sector authenticity bands — AMA signals, not chart decoration.",
         ),
         (
             "2",
             "Go / No-Go · underwriter decides",
-            "Health Card + BRE recommend; maker–checker owns Approve / Refer / Reject. AI gives reason and logic only.",
+            "BRE recommends Approve / Refer / Reject / Incomplete; Low confidence forces maker–checker. AI gives reason only.",
         ),
         (
             "3",
             "Thin-file NTC/NTB not auto-rejected",
-            "143/143 credit-invisible MSMEs kept in the funnel; path-to-credit when papers are thin.",
+            "Credit-invisible MSMEs stay in the funnel; Credit-Invisible Lift + scheme readiness on the workbench.",
         ),
         (
             "4",
             "Pilot-ready path, honest today",
-            "Live prototype + frozen MsmeCase + ULI/OCEN/AA-style stubs → IDBI sandbox APIs on an approved AWS path after shortlist.",
+            "Live prototype + rails honesty panel + SETUP_GAPS → IDBI sandbox APIs on an approved AWS path after shortlist.",
         ),
     ]
 

@@ -128,7 +128,12 @@ export function WorkflowProvider({ children }: { children: ReactNode }) {
       checkerSanction: (id, by, note) =>
         update(id, (w) => ({
           ...w,
-          status: w.makerDecision === "Reject" ? "Declined" : "Sanctioned",
+          status:
+            w.makerDecision === "Reject"
+              ? "Declined"
+              : w.makerDecision === "Incomplete"
+                ? "Returned"
+                : "Sanctioned",
           checkerBy: by,
           checkerAt: now(),
           checkerNote: note,

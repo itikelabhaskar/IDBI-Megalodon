@@ -1,7 +1,7 @@
 import type { Decision } from "@/lib/types";
 import { decisionTone, decisionToneSolid } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
+import { CheckCircle2, AlertCircle, XCircle, CircleDashed } from "lucide-react";
 
 export function DecisionPill({
   decision,
@@ -14,7 +14,14 @@ export function DecisionPill({
   variant?: "soft" | "solid";
   size?: "sm" | "md";
 }) {
-  const Icon = decision === "Approve" ? CheckCircle2 : decision === "Refer" ? AlertCircle : XCircle;
+  const Icon =
+    decision === "Approve"
+      ? CheckCircle2
+      : decision === "Refer"
+        ? AlertCircle
+        : decision === "Incomplete"
+          ? CircleDashed
+          : XCircle;
   return (
     <span
       className={cn(

@@ -66,10 +66,13 @@ export function nextOfficerAction(c: MsmeCase): OfficerAction {
       rank: 5,
     };
   }
-  if (c.decision === "Reject") {
+  if (c.decision === "Reject" || c.decision === "Incomplete") {
     return {
       label: "Path to credit",
-      description: "Share corrective actions and keep the applicant out of straight-through flow",
+      description:
+        c.decision === "Incomplete"
+          ? "Evidence Incomplete — gather alternate-data rails before any credit call"
+          : "Share corrective actions and keep the applicant out of straight-through flow",
       rank: 4,
     };
   }
@@ -197,6 +200,19 @@ export function triangulationVerdicts(c: MsmeCase): TriangulationVerdict[] {
       label: "Payroll consistency",
       status: payroll ? "Review" : "Pass",
       detail: payroll?.label ?? "No payroll divergence flag",
+    },
+    {
+      label: "Operational authenticity",
+      status:
+        c.authenticity.band === "Weak"
+          ? "Review"
+          : c.authenticity.band === "Unavailable"
+            ? "Review"
+            : "Pass",
+      detail:
+        c.authenticity.band === "Weak"
+          ? `Authenticity band Weak — ${c.authenticity.summary}`
+          : c.authenticity.summary,
     },
   ];
 }
