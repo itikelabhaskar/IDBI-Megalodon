@@ -55,7 +55,8 @@ docs/VIDEO_SCRIPT_3MIN.md
 ppt_org_template.pptx
 docs/ppt-assets/
 assets/ppt_shots/
-scripts/ppt_upgrade_*.py
+scripts/ppt_*.py
 scripts/fill_phase*.py
 scripts/fix_phase*.py
 ~$*.pptx
+*Submission Deck*_final.pdf
